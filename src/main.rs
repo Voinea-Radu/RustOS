@@ -21,5 +21,8 @@ pub extern "C" fn _start() -> ! {
         write!(WRITER.lock(), "Line {i}\n").unwrap();
     }
 
+    print!("Hello ");
+    println!("Pudel Prost");
+
     loop {}
 }

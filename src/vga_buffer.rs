@@ -1,4 +1,13 @@
+use core::fmt;
+use lazy_static::lazy_static;
+use spin::Mutex;
+use volatile::Volatile;
 use crate::statics::{BUFFER_HEIGHT, BUFFER_WIDTH};
+use crate::vga_buffer::Color::{Black, White};
+
+lazy_static! {
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer::new(ColorCode::new(White, Black)));
+}
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -41,7 +50,7 @@ struct ScreenChar {
 
 #[repr(transparent)]
 struct Buffer {
-    chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
+    chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
 pub struct Writer {
@@ -74,10 +83,10 @@ impl Writer {
                 let row = self.row_position;
                 let col = self.column_position;
 
-                self.buffer.chars[row][col] = ScreenChar {
+                self.buffer.chars[row][col].write(ScreenChar {
                     character: byte,
                     color_code: self.color_code,
-                };
+                });
 
                 self.column_position += 1;
             }
@@ -85,7 +94,7 @@ impl Writer {
     }
 
     pub fn write_str(&mut self, string: &str) {
-        for byte in string.bytes(){
+        for byte in string.bytes() {
             match byte {
                 0x20..=0x7e | b'\n' => self.write_byte(byte),
                 _ => self.write_byte(0xfe),
@@ -96,5 +105,34 @@ impl Writer {
     pub fn print_new_line(&mut self) {
         self.row_position += 1;
         self.column_position = 0;
+
+        // Shift the screen up
+        if self.row_position >= BUFFER_HEIGHT {
+            for y in 1..BUFFER_HEIGHT {
+                for x in 0..BUFFER_WIDTH {
+                    let char = self.buffer.chars[y][x].read();
+                    self.buffer.chars[y - 1][x].write(char)
+                }
+            }
+            self.row_position = BUFFER_HEIGHT - 1;
+        }
+
+        // Clear last row
+        for x in 0..BUFFER_WIDTH {
+            let char = ScreenChar {
+                character: 0,
+                color_code: self.color_code,
+            };
+
+            self.buffer.chars[BUFFER_HEIGHT - 1][x].write(char);
+        }
+    }
+}
+
+
+impl fmt::Write for Writer {
+    fn write_str(&mut self, string: &str) -> fmt::Result {
+        self.write_str(string);
+        Ok(())
     }
 }

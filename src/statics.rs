@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 
 // Credit: https://www.patorjk.com/software/taag/#p=display&f=Big%20Money-nw&t=RustOS
 pub static WELCOME_MESSAGE: &str = r#"

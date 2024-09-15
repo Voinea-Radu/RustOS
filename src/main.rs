@@ -1,62 +1,21 @@
 #![no_std]
 #![no_main]
 
+mod vga_buffer;
+mod statics;
+
 use core::panic::PanicInfo;
+use crate::statics::TROLL_MESSAGE;
+use crate::vga_buffer::{Color, ColorCode, Writer};
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
-
-// Credit: https://www.patorjk.com/software/taag/#p=display&f=Big%20Money-nw&t=RustOS
-static WELCOME_MESSAGE: &[u8] = br#"
-$$$$$$$\                        $$\     $$$$$$\   $$$$$$\                      |
-$$  __$$\                       $$ |   $$  __$$\ $$  __$$\                     |
-$$ |  $$ |$$\   $$\  $$$$$$$\ $$$$$$\  $$ /  $$ |$$ /  \__|                    |
-$$$$$$$  |$$ |  $$ |$$  _____|\_$$  _| $$ |  $$ |\$$$$$$\                      |
-$$  __$$< $$ |  $$ |\$$$$$$\    $$ |   $$ |  $$ | \____$$\                     |
-$$ |  $$ |$$ |  $$ | \____$$\   $$ |$$\$$ |  $$ |$$\   $$ |                    |
-$$ |  $$ |\$$$$$$  |$$$$$$$  |  \$$$$  |$$$$$$  |\$$$$$$  |                    |
-\__|  \__| \______/ \_______/    \____/ \______/  \______/                     |
-by two _totally_ sane CS students
-"#;
-static TROLL_MESSAGE: &[u8] = br#"
-$$\      $$\                 $$\           $$\ $$\                             |
-$$$\    $$$ |                $$ |          $$ |\__|                            |
-$$$$\  $$$$ | $$$$$$\   $$$$$$$ | $$$$$$\  $$ |$$\ $$$$$$$\                    |
-$$\$$\$$ $$ | \____$$\ $$  __$$ | \____$$\ $$ |$$ |$$  __$$\                   |
-$$ \$$$  $$ | $$$$$$$ |$$ /  $$ | $$$$$$$ |$$ |$$ |$$ |  $$ |                  |
-$$ |\$  /$$ |$$  __$$ |$$ |  $$ |$$  __$$ |$$ |$$ |$$ |  $$ |                  |
-$$ | \_/ $$ |\$$$$$$$ |\$$$$$$$ |\$$$$$$$ |$$ |$$ |$$ |  $$ |                  |
-\__|     \__| \_______| \_______| \_______|\__|\__|\__|  \__|                  |
-   $$\  $$$$$$\        $$$$$$$\                      $$\                       |
-  $$  |$$ ___$$\       $$  __$$\                     \__|                      |
- $$  / \_/   $$ |      $$ |  $$ | $$$$$$\   $$$$$$\  $$\  $$$$$$\              |
-$$  /    $$$$$ /       $$ |  $$ | \____$$\ $$  __$$\ $$ | \____$$\             |
-\$$<     \___$$\       $$ |  $$ | $$$$$$$ |$$ |  \__|$$ | $$$$$$$ |            |
- \$$\  $$\   $$ |      $$ |  $$ |$$  __$$ |$$ |      $$ |$$  __$$ |            |
-  \$$\ \$$$$$$  |      $$$$$$$  |\$$$$$$$ |$$ |      $$ |\$$$$$$$ |            |
-   \__| \______/       \_______/  \_______|\__|      \__| \_______|            |
-"#;
-
-
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    let vga_buffer: *mut u8 = 0xb8000 as *mut u8;
-
-    let mut index: isize = 0;
-
-    for &byte in TROLL_MESSAGE {
-        if byte == '\n' as u8 {
-            continue;
-        }
-        unsafe {
-            *vga_buffer.offset(index * 2) = byte;
-            *vga_buffer.offset(index * 2 + 1) = 0xb;
-        }
-
-        index += 1
-    }
+    let mut writer: Writer = Writer::new(ColorCode::new(Color::Red, Color::Black));
+    writer.write_str(TROLL_MESSAGE);
 
     loop {}
 }

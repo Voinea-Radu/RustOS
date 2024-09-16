@@ -7,12 +7,13 @@ pub enum QemuExitCode {
     Fail = 0x11,
 }
 
-pub fn exit_qemu(exit_code: QemuExitCode) {
+pub fn exit_qemu(exit_code: QemuExitCode) -> ! {
     use x86_64::instructions::port::Port;
-    use core::arch::asm;
 
     unsafe {
         let mut port = Port::new(ISA_DEBUG_EXIT_DEVICE_PORT);
-        port.write(exit_code as u32);
+        port.write(exit_code as u32)
     }
+
+    loop{}
 }

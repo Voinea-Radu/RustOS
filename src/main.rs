@@ -10,6 +10,7 @@ mod utils {
 mod driver {
     pub mod vga_driver;
     pub mod qemu;
+    pub mod serial;
 }
 mod kernel {
     pub mod panic;

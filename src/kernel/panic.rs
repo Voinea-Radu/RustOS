@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 use core::panic::PanicInfo;
 use crate::println;
 

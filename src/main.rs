@@ -18,9 +18,8 @@ mod test {
     pub mod tester;
 }
 
-use core::fmt::{Write};
-use crate::driver::vga_driver::{Color, WRITER};
 use crate::driver::vga_driver::ColorCode::{Black, LightCyan};
+use crate::driver::vga_driver::Color;
 use crate::utils::statics::TROLL_MESSAGE;
 
 //noinspection RsUnresolvedPath
@@ -36,10 +35,7 @@ pub extern "C" fn _start() -> ! {
 }
 
 pub fn main() {
-    WRITER.lock().color(Color::new(LightCyan, Black));
-    println!("{}", TROLL_MESSAGE);
-
-    WRITER.lock().reset_color();
+    println_color!("{}", TROLL_MESSAGE => Color::new(LightCyan, Black));
     println!("Hello {}", "Pudel Vesel!\n");
 
     // for i in 0..50{
@@ -53,6 +49,7 @@ pub fn main() {
 
 
 #[cfg(not(test))]
+#[allow(dead_code)]
 fn test_main() {
     // This is here just for RustRover to not complain about it not existing.
     // The function is generated at compile time by the rust compiler for running tests.

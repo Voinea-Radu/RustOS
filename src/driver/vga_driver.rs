@@ -73,9 +73,11 @@ impl Writer {
     }
 
     pub fn write_byte(&mut self, byte: u8) {
+        #[allow(deprecated)]
         self.write_byte_color(byte, self.color);
     }
 
+    #[deprecated]
     pub fn write_byte_color(&mut self, byte: u8, _color: Color) {
         match byte {
             b'\n' => self.print_new_line(),
@@ -97,14 +99,16 @@ impl Writer {
         }
     }
 
-
     pub fn write_str(&mut self, string: &str) {
+        #[allow(deprecated)]
         self.write_str_color(string, self.color);
     }
 
+    #[deprecated]
     pub fn write_str_color(&mut self, string: &str, color: Color) {
         for byte in string.bytes() {
             match byte {
+                #[allow(deprecated)]
                 0x20..=0x7e | b'\n' => self.write_byte_color(byte, color),
                 _ => self.write_byte(0xfe),
             }
@@ -137,12 +141,17 @@ impl Writer {
         }
     }
 
-    pub fn color(&mut self, color: Color) {
+    pub fn color(&mut self) -> Color {
+        self.color
+    }
+
+    pub fn set_color(&mut self, color: Color) {
         self.color = color;
     }
 
+    #[allow(dead_code)]
     pub fn reset_color(&mut self) {
-        self.color(Color::new(White, Black))
+        self.set_color(Color::new(White, Black))
     }
 }
 

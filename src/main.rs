@@ -1,31 +1,61 @@
 #![no_std]
 #![no_main]
+#![reexport_test_harness_main = "test_main"]
+#![feature(custom_test_frameworks)]
+#![test_runner(test::tester::test_runner)]
 
-mod vga_buffer;
-mod statics;
+mod utils {
+    pub mod statics;
+}
+mod driver {
+    pub mod vga_driver;
+}
+mod kernel {
+    pub mod panic;
+    pub mod io;
+}
+mod test {
+    pub mod tester;
+}
 
-use core::panic::PanicInfo;
-use crate::statics::TROLL_MESSAGE;
-use crate::vga_buffer::{WRITER};
-use core::fmt::Write;
+use core::fmt::{Write};
+use crate::driver::vga_driver::{Color, WRITER};
+use crate::driver::vga_driver::ColorCode::{Black, LightCyan};
+use crate::utils::statics::TROLL_MESSAGE;
 
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    println!("{}: {}", info.location().unwrap(), info.message());
+//noinspection RsUnresolvedPath
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    #[cfg(test)]
+    test_main();
+
+    #[cfg(not(test))]
+    main();
+
     loop {}
 }
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    write!(WRITER.lock(), "{}", TROLL_MESSAGE).unwrap();
-    write!(WRITER.lock(), "Hello {}", "Pudel Vesel!\n").unwrap();
-    for i in 0..50{
-        write!(WRITER.lock(), "Line {i}\n").unwrap();
-    }
+pub fn main() {
+    WRITER.lock().color(Color::new(LightCyan, Black));
+    println!("{}", TROLL_MESSAGE);
+
+    WRITER.lock().reset_color();
+    println!("Hello {}", "Pudel Vesel!\n");
+
+    // for i in 0..50{
+    //     write!(WRITER.lock(), "Line {i}\n").unwrap();
+    // }
 
     print!("Hello ");
     println!("Pudel Prost");
-    panic!("Pudel si Daria au iesit la cafea");
-
-    loop {}
+    panic!("Pudelul si Daria au iesit la cafea");
 }
+
+
+#[cfg(not(test))]
+fn test_main() {
+    // This is here just for RustRover to not complain about it not existing.
+    // The function is generated at compile time by the rust compiler for running tests.
+}
+
+

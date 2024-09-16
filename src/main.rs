@@ -9,6 +9,7 @@ mod utils {
 }
 mod driver {
     pub mod vga_driver;
+    pub mod qemu;
 }
 mod kernel {
     pub mod panic;
@@ -18,8 +19,9 @@ mod test {
     pub mod tester;
 }
 
-use crate::driver::vga_driver::ColorCode::{Black, LightCyan};
+use crate::driver::qemu::{exit_qemu, QemuExitCode};
 use crate::driver::vga_driver::Color;
+use crate::driver::vga_driver::ColorCode::{Black, LightCyan};
 use crate::utils::statics::TROLL_MESSAGE;
 
 //noinspection RsUnresolvedPath
@@ -38,13 +40,9 @@ pub fn main() {
     println_color!("{}", TROLL_MESSAGE => Color::new(LightCyan, Black));
     println!("Hello {}", "Pudel Vesel!\n");
 
-    // for i in 0..50{
-    //     write!(WRITER.lock(), "Line {i}\n").unwrap();
-    // }
-
     print!("Hello ");
-    println!("Pudel Prost");
-    panic!("Pudelul si Daria au iesit la cafea");
+    println!("Pudel Prost!");
+    panic!("Pudelul si Daria au iesit la cafea!");
 }
 
 

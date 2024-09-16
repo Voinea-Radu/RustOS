@@ -37,3 +37,5 @@ $$  /    $$$$$ /       $$ |  $$ | \____$$\ $$  __$$\ $$ | \____$$\
 
 pub const BUFFER_HEIGHT: usize = 25;
 pub const BUFFER_WIDTH: usize = 80;
+
+pub const ISA_DEBUG_EXIT_DEVICE_PORT: u16 = 0xf4;

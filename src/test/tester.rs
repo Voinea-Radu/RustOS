@@ -2,11 +2,11 @@
 #![allow(dead_code)]
 
 use crate::driver::qemu::{exit_qemu, QemuExitCode};
-use crate::utils::statics::WELCOME_MESSAGE;
-use crate::{print, println, println_color, print_serial, println_serial, println_serial_color};
-use core::panic::PanicInfo;
 use crate::utils::color::Color;
 use crate::utils::color::ColorCode::{LightCyan, LightGreen, LightRed, Yellow};
+use crate::utils::statics::WELCOME_MESSAGE;
+use crate::{print, print_serial, println, println_color, println_serial, println_serial_color};
+use core::panic::PanicInfo;
 
 #[cfg(test)]
 #[panic_handler]
@@ -23,24 +23,19 @@ fn panic(info: &PanicInfo) -> ! {
 
     // TODO Add a better way
     // Sleep for 10s (only for 5 GHz CPU)
-    for _ in 0..50_000_000{
-    }
+    for _ in 0..50_000_000 {}
 
     exit_qemu(QemuExitCode::Fail)
 }
 
 #[cfg(test)]
-pub fn test_runner(tests: &[&dyn Fn() -> bool]) {
+pub fn test_runner(tests: &[&dyn Testable]) {
     println_color!("{}", WELCOME_MESSAGE => Color::new_simple(LightCyan));
 
     println!("Running {} tests", tests.len());
     println_serial!("Running {} tests", tests.len());
-    for (index, test) in tests.iter().enumerate() {
-        print!("Running test {}... ", index);
-        print_serial!("Running test {}... ", index);
-        test();
-        println_color!("OK" => Color::new_simple(LightGreen));
-        println_serial_color!("OK" => Color::new_simple(LightGreen));
+    for test in tests {
+        test.run();
     }
 
     println_color!("All tests finished successfully. This window will close automatically in 10s" => Color::new_simple(Yellow));
@@ -48,31 +43,44 @@ pub fn test_runner(tests: &[&dyn Fn() -> bool]) {
 
     // TODO Add a better way
     // Sleep for 10s (only for 5 GHz CPU)
-    for _ in 0..50_000_000{
-    }
+    for _ in 0..50_000_000 {}
 
     exit_qemu(QemuExitCode::Success)
+}
+
+pub trait Testable {
+    fn run(&self);
+}
+
+impl<T> Testable for T
+where
+    T: Fn(),
+{
+    fn run(&self) {
+        print!("Running test {}... ", core::any::type_name::<T>());
+        print_serial!("Running test {}... ", core::any::type_name::<T>());
+        self();
+        println_color!("OK" => Color::new_simple(LightGreen));
+        println_serial_color!("OK" => Color::new_simple(LightGreen));
+    }
 }
 
 // TODO Remove these at some point
 // =============================== EXAMPLE TESTS ===============================
 #[test_case]
-fn trivial_assertion() -> bool {
+fn trivial_assertion_1() {
     assert_eq!(1, 1);
-    true
 }
 
 #[test_case]
-fn trivial_assertion_2() -> bool {
+fn trivial_assertion_2() {
     assert_eq!(1, 1);
-    true
 }
 
 #[test_case]
-fn trivial_assertion_3() -> bool {
+fn trivial_assertion_3() {
     // If you haven't figured out already this test is supposed to fail.
     // Do you even know Rust?
     assert_eq!(1, 2);
-    true
 }
 // =============================== EXAMPLE TESTS ===============================

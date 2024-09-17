@@ -16,34 +16,40 @@ fn panic(info: &PanicInfo) -> ! {
     println_color!("Error at: {}: {}", info.location().unwrap(), info.message() => Color::new_simple(LightRed));
     println_serial_color!("Error at: {}: {}", info.location().unwrap(), info.message() => Color::new_simple(LightRed));
 
-    println_color!("One or more test(s) failed. This window will close automatically in 10s.\n\
-    You should be able to find the test logs in the console that you have started qemu with" => Color::new_simple(Yellow));
-    println_serial_color!("One or more test(s) failed. This window will close automatically in 10s.\n\
-    You should be able to find the test logs in the console that you have started qemu with" => Color::new_simple(Yellow));
+    // println_color!("One or more test(s) failed. This window will close automatically in 10s.\n\
+    // You should be able to find the test logs in the console that you have started qemu with.\n" => Color::new_simple(Yellow));
+    // println_serial_color!("One or more test(s) failed. This window will close automatically in 10s.\n" => Color::new_simple(Yellow));
+
+    println_color!("One or more test(s) failed.\n\
+    You should be able to find the test logs in the console that you have started qemu with." => Color::new_simple(Yellow));
+    println_serial_color!("One or more test(s) failed." => Color::new_simple(Yellow));
+
 
     // TODO Add a better way
     // Sleep for 10s (only for 5 GHz CPU)
-    for _ in 0..50_000_000 {}
+    // for _ in 0..50_000_000 {}
 
     exit_qemu(QemuExitCode::Fail)
 }
 
-#[cfg(test)]
 pub fn test_runner(tests: &[&dyn Testable]) {
     println_color!("{}", WELCOME_MESSAGE => Color::new_simple(LightCyan));
 
-    println!("Running {} tests", tests.len());
-    println_serial!("Running {} tests", tests.len());
+    println!("\nRunning {} tests", tests.len());
+    println_serial!("\nRunning {} tests", tests.len());
     for test in tests {
         test.run();
     }
 
-    println_color!("All tests finished successfully. This window will close automatically in 10s" => Color::new_simple(Yellow));
-    println_serial_color!("All tests finished successfully. The qemu window will close automatically in 10s" => Color::new_simple(Yellow));
+    println_color!("All tests finished successfully." => Color::new_simple(Yellow));
+    println_serial_color!("All tests finished successfully." => Color::new_simple(Yellow));
+
+    // println_color!("All tests finished successfully. This window will close automatically in 10s\n" => Color::new_simple(Yellow));
+    // println_serial_color!("All tests finished successfully. The qemu window will close automatically in 10s\n" => Color::new_simple(Yellow));
 
     // TODO Add a better way
     // Sleep for 10s (only for 5 GHz CPU)
-    for _ in 0..50_000_000 {}
+    // for _ in 0..50_000_000 {}
 
     exit_qemu(QemuExitCode::Success)
 }

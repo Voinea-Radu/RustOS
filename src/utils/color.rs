@@ -55,7 +55,7 @@ impl ColorCode {
 
     pub fn get_ansi_code_foreground(&self) -> &str {
         match self {
-            ColorCode::Reset => "\x1B[m",
+            ColorCode::Reset => "\x1B[0m",
             ColorCode::Black => "\x1B[30m",
             ColorCode::Blue => "\x1B[34m",
             ColorCode::Green => "\x1B[32m",

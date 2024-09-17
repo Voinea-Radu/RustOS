@@ -2,27 +2,12 @@
 #![no_main]
 #![reexport_test_harness_main = "test_main"]
 #![feature(custom_test_frameworks)]
-#![test_runner(test::tester::test_runner)]
+#![test_runner(rust_os::test::tester::test_runner)]
 
-mod utils {
-    pub mod statics;
-    pub mod color;
-}
-mod driver {
-    pub mod vga;
-    pub mod qemu;
-    pub mod serial;
-}
-mod kernel {
-    pub mod panic;
-}
-mod test {
-    pub mod tester;
-}
-
-use crate::utils::color::Color;
-use crate::utils::color::ColorCode::LightCyan;
-use crate::utils::statics::TROLL_MESSAGE;
+use rust_os::{print, println, println_color};
+use rust_os::utils::color::Color;
+use rust_os::utils::color::ColorCode::LightCyan;
+use rust_os::utils::statics::TROLL_MESSAGE;
 
 //noinspection RsUnresolvedPath
 #[no_mangle]

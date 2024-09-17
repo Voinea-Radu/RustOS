@@ -13,7 +13,11 @@ lazy_static! {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 struct ScreenChar {
+    // 0-255. https://en.wikipedia.org/wiki/Code_page_437
     character: u8,
+    // BBBBFFFF
+    // F is the foreground color
+    // B is the background color
     color: u8,
 }
 

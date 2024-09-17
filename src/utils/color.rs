@@ -1,6 +1,7 @@
+#![allow(dead_code)]
+
 use crate::utils::color::ColorCode::{Black, Reset};
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ColorCode {
     Reset,
@@ -126,7 +127,7 @@ impl Color {
     }
 
     pub fn get_vga_color(&self) -> u8 {
-        (self.background as u8) << 4 | (self.foreground as u8)
+        (self.background.get_vga_code()) << 4 | (self.foreground.get_vga_code())
     }
 
     pub fn get_ansi_color<'a>(&'a self) -> &'a str {

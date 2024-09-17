@@ -21,7 +21,7 @@ mod test {
 }
 
 use crate::utils::color::Color;
-use crate::utils::color::ColorCode::{Black, LightCyan};
+use crate::utils::color::ColorCode::LightCyan;
 use crate::utils::statics::TROLL_MESSAGE;
 
 //noinspection RsUnresolvedPath

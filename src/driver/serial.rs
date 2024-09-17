@@ -1,11 +1,9 @@
-use core::fmt;
+use crate::utils::color::Color;
 use crate::utils::statics::SERIAL_PORT_1;
+use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use uart_16550::SerialPort;
-use crate::driver::vga::WRITER;
-use crate::utils::color::Color;
-use crate::utils::color::ColorCode::Reset;
 
 lazy_static! {
     pub static ref SERIAL_1: Mutex<SerialPort> = {

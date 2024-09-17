@@ -39,7 +39,7 @@ pub fn test_runner(tests: &[&dyn Testable]) {
     }
 
     println_color!("All tests finished successfully. This window will close automatically in 10s" => Color::new_simple(Yellow));
-    println_serial_color!("All tests finished successfully. This window will close automatically in 10s" => Color::new_simple(Yellow));
+    println_serial_color!("All tests finished successfully. The qemu window will close automatically in 10s" => Color::new_simple(Yellow));
 
     // TODO Add a better way
     // Sleep for 10s (only for 5 GHz CPU)
@@ -68,19 +68,7 @@ where
 // TODO Remove these at some point
 // =============================== EXAMPLE TESTS ===============================
 #[test_case]
-fn trivial_assertion_1() {
+fn simple_assertion() {
     assert_eq!(1, 1);
-}
-
-#[test_case]
-fn trivial_assertion_2() {
-    assert_eq!(1, 1);
-}
-
-#[test_case]
-fn trivial_assertion_3() {
-    // If you haven't figured out already this test is supposed to fail.
-    // Do you even know Rust?
-    assert_eq!(1, 2);
 }
 // =============================== EXAMPLE TESTS ===============================

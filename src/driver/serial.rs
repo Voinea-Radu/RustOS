@@ -49,7 +49,7 @@ macro_rules! println_serial {
         print!("\n");
     };
     ($($arg:expr),*) => {
-        crate::print!("{}\n", format_args!($($arg),*));
+        crate::print_serial!("{}\n", format_args!($($arg),*));
     };
 }
 

@@ -1,10 +1,10 @@
+use crate::utils::color::Color;
+use crate::utils::color::ColorCode::{Black, White};
+use crate::utils::statics::{BUFFER_HEIGHT, BUFFER_WIDTH};
 use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use volatile::Volatile;
-use crate::utils::color::Color;
-use crate::utils::color::ColorCode::{Black, White};
-use crate::utils::statics::{BUFFER_HEIGHT, BUFFER_WIDTH};
 
 lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer::new(Color::new(White, Black)));
@@ -197,5 +197,32 @@ macro_rules! println_color {
     ($($arg:expr),* => $color:expr) => {
         crate::print_color!("{}\n", format_args!($($arg),*) => $color);
     };
+}
+
+#[test_case]
+fn test_println_simple() {
+    // Testing if println does panic
+    println!("test_println_simple");
+}
+
+#[test_case]
+fn test_println_multiple() {
+    // Testing if println does panic if the pane needs to scroll down
+    for _ in 0..100 {
+        println!("test_println_multiple");
+    }
+}
+
+#[test_case]
+fn test_println_buffer() {
+    // Testing if println does add the contents correctly into the vga buffer
+    println!();
+    let string = "test_println_buffer";
+    println!("{}", string);
+    let row = WRITER.lock().row_position -1; // last row as we did a \n
+    for (index, char) in string.chars().enumerate() {
+        let buffer_char = WRITER.lock().buffer.chars[row][index].read().character;
+        assert_eq!(char as u8, buffer_char);
+    }
 }
 

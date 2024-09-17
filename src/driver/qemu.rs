@@ -2,6 +2,7 @@ use crate::utils::statics::ISA_DEBUG_EXIT_DEVICE_PORT;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
+#[allow(dead_code)]
 pub enum QemuExitCode {
     Success = 0x10,
     Fail = 0x11,

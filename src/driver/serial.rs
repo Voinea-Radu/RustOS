@@ -1,7 +1,11 @@
+use core::fmt;
+use crate::utils::statics::SERIAL_PORT_1;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use uart_16550::SerialPort;
-use crate::utils::statics::SERIAL_PORT_1;
+use crate::driver::vga::WRITER;
+use crate::utils::color::Color;
+use crate::utils::color::ColorCode::Reset;
 
 lazy_static! {
     pub static ref SERIAL_1: Mutex<SerialPort> = {
@@ -13,21 +17,63 @@ lazy_static! {
     };
 }
 
-pub fn _print(args: ::core::fmt::Arguments) {
+
+
+pub fn _print(args: fmt::Arguments, color: Option<Color>) {
     use core::fmt::Write;
-    SERIAL_1.lock().write_fmt(args).expect("Printing to serial failed");
+
+    match color {
+        None => {
+            SERIAL_1.lock().write_fmt(args).expect("Printing to serial port failed");
+        }
+        Some(color) => {
+            SERIAL_1.lock().write_fmt(format_args!("{}{}{}", color.get_ansi_color(), args, Color::reset_color().get_ansi_color())).expect("Printing to serial port failed");
+        }
+    }
 }
 
+/**
+print!("Example {} {} {}", 1, 2, 3);
+**/
 #[macro_export]
 macro_rules! print_serial {
     ($($arg:tt)*) => {
-        $crate::driver::serial::_print(format_args!($($arg)*));
+        crate::driver::serial::_print(format_args!($($arg)*), None);
     };
 }
 
+/**
+println!("Example {} {} {}", 1, 2, 3);
+**/
 #[macro_export]
 macro_rules! println_serial {
-    () => ($crate::print_serial!("\n"));
-    ($fmt:expr) => ($crate::print_serial!(concat!($fmt, "\n")));
-    ($fmt:expr, $($arg:tt)*) => ($crate::print_serial!(concat!($fmt, "\n"), $($arg)*));
+    () => {
+        print!("\n");
+    };
+    ($($arg:expr),*) => {
+        crate::print!("{}\n", format_args!($($arg),*));
+    };
+}
+
+/**
+print_color!("Example {} {} {}", 1, 2, 3 => Color::new(LightRed, Black));
+**/
+#[macro_export]
+macro_rules! print_serial_color {
+    ($($arg:expr),* => $color:expr) => {
+        crate::driver::serial::_print(format_args!($($arg),*), Some($color));
+    };
+}
+
+/**
+println_color!("Example {} {} {}", 1, 2, 3 => Color::new(LightRed, Black));
+**/
+#[macro_export]
+macro_rules! println_serial_color {
+    () => {
+        print!("\n");
+    };
+    ($($arg:expr),* => $color:expr) => {
+        crate::print_serial_color!("{}\n", format_args!($($arg),*) => $color);
+    };
 }

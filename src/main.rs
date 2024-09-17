@@ -6,23 +6,22 @@
 
 mod utils {
     pub mod statics;
+    pub mod color;
 }
 mod driver {
-    pub mod vga_driver;
+    pub mod vga;
     pub mod qemu;
     pub mod serial;
 }
 mod kernel {
     pub mod panic;
-    pub mod io;
 }
 mod test {
     pub mod tester;
 }
 
-use crate::driver::qemu::{exit_qemu, QemuExitCode};
-use crate::driver::vga_driver::Color;
-use crate::driver::vga_driver::ColorCode::{Black, LightCyan};
+use crate::utils::color::Color;
+use crate::utils::color::ColorCode::{Black, LightCyan};
 use crate::utils::statics::TROLL_MESSAGE;
 
 //noinspection RsUnresolvedPath
@@ -38,7 +37,7 @@ pub extern "C" fn _start() -> ! {
 }
 
 pub fn main() {
-    println_color!("{}", TROLL_MESSAGE => Color::new(LightCyan, Black));
+    println_color!("{}", TROLL_MESSAGE => Color::new_simple(LightCyan));
     println!("Hello {}", "Pudel Vesel!\n");
 
     print!("Hello ");

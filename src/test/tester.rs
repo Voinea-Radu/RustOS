@@ -3,7 +3,7 @@
 
 use crate::driver::qemu::{exit_qemu, QemuExitCode};
 use crate::utils::color::Color;
-use crate::utils::color::ColorCode::{LightCyan, LightGreen, LightRed, Yellow};
+use crate::utils::color::ColorCode::{Green, LightCyan, LightGreen, LightRed, Yellow};
 use crate::utils::statics::WELCOME_MESSAGE;
 use crate::{print, print_serial, println, println_color, println_serial, println_serial_color};
 use core::panic::PanicInfo;
@@ -41,8 +41,8 @@ pub fn test_runner(tests: &[&dyn Testable]) {
         test.run();
     }
 
-    println_color!("All tests finished successfully." => Color::new_simple(Yellow));
-    println_serial_color!("All tests finished successfully." => Color::new_simple(Yellow));
+    println_color!("All tests finished successfully." => Color::new_simple(Green));
+    println_serial_color!("All tests finished successfully." => Color::new_simple(Green));
 
     // println_color!("All tests finished successfully. This window will close automatically in 10s\n" => Color::new_simple(Yellow));
     // println_serial_color!("All tests finished successfully. The qemu window will close automatically in 10s\n" => Color::new_simple(Yellow));
@@ -71,10 +71,8 @@ where
     }
 }
 
-// TODO Remove these at some point
-// =============================== EXAMPLE TESTS ===============================
 #[test_case]
 fn simple_assertion() {
+    // This is here just to make sure tests implementation works
     assert_eq!(1, 1);
 }
-// =============================== EXAMPLE TESTS ===============================

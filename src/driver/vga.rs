@@ -12,25 +12,25 @@ lazy_static! {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-struct ScreenChar {
+pub struct ScreenChar {
     // 0-255. https://en.wikipedia.org/wiki/Code_page_437
-    character: u8,
+    pub character: u8,
     // BBBBFFFF
     // F is the foreground color
     // B is the background color
-    color: u8,
+    pub color: u8,
 }
 
 #[repr(transparent)]
-struct Buffer {
-    chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
+pub struct Buffer {
+    pub chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
 pub struct Writer {
-    column_position: usize,
-    row_position: usize,
-    color: Color,
-    buffer: &'static mut Buffer,
+    pub column_position: usize,
+    pub row_position: usize,
+    pub color: Color,
+    pub buffer: &'static mut Buffer,
 }
 
 impl Writer {
@@ -197,32 +197,5 @@ macro_rules! println_color {
     ($($arg:expr),* => $color:expr) => {
         $crate::print_color!("{}\n", format_args!($($arg),*) => $color);
     };
-}
-
-#[test_case]
-fn test_println_simple() {
-    // Testing if println does panic
-    println!("test_println_simple");
-}
-
-#[test_case]
-fn test_println_multiple() {
-    // Testing if println does panic if the pane needs to scroll down
-    for _ in 0..100 {
-        println!("test_println_multiple");
-    }
-}
-
-#[test_case]
-fn test_println_buffer() {
-    // Testing if println does add the contents correctly into the vga buffer
-    println!();
-    let string = "test_println_buffer";
-    println!("{}", string);
-    let row = WRITER.lock().row_position -1; // last row as we did a \n
-    for (index, char) in string.chars().enumerate() {
-        let buffer_char = WRITER.lock().buffer.chars[row][index].read().character;
-        assert_eq!(char as u8, buffer_char);
-    }
 }
 

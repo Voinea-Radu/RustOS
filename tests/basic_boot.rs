@@ -19,6 +19,7 @@ fn test_main() {
 }
 
 #[test_case]
-fn basic_boot() {
+fn simple_test() {
+    // This is here just to make sure integration tests work
     assert_eq!(1, 1);
 }

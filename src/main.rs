@@ -4,10 +4,15 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(rust_os::test::tester::test_runner)]
 
+use core::panic::PanicInfo;
 use rust_os::utils::color::Color;
 use rust_os::utils::color::ColorCode::LightCyan;
 use rust_os::utils::statics::TROLL_MESSAGE;
-use rust_os::{print, println, println_color};
+use rust_os::{print, println, println_color, test};
+
+pub mod kernel{
+    pub mod panic;
+}
 
 //noinspection RsUnresolvedPath
 #[no_mangle]
@@ -31,10 +36,19 @@ pub fn main() {
     println!("Pudel Prost!");
 
     // panic!("Pudelul si Daria au iesit la cafea!");
-
-    stackoverflow()
 }
 
-fn stackoverflow() {
-    stackoverflow();
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    println!("Panicked at {}: {}", info.location().unwrap(), info.message());
+    loop {}
 }
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    test::tester::test_fail_with_error(info);
+}
+
+

@@ -4,6 +4,9 @@
 #![test_runner(rust_os::test::tester::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+use core::panic::PanicInfo;
+use rust_os::test::tester::{test_fail_with_error};
+
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     rust_os::init();
@@ -18,6 +21,11 @@ pub extern "C" fn _start() -> ! {
 fn test_main() {
     // This is here just for RustRover to not complain about it not existing.
     // The function is generated at compile time by the rust compiler for running tests.
+}
+
+#[panic_handler]
+fn panic(info: &PanicInfo) -> !{
+    test_fail_with_error(info);
 }
 
 #[test_case]

@@ -5,8 +5,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use rust_os::println;
-use rust_os::test::tester::test_fail_with_error;
+use rust_os::test::tester::{all_tests_pass, test_pass};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -24,14 +23,15 @@ fn test_main() {
     // The function is generated at compile time by the rust compiler for running tests.
 }
 
+
 #[panic_handler]
-fn panic(info: &PanicInfo) -> !{
-    test_fail_with_error(info);
+fn panic(_info: &PanicInfo) -> !{
+    test_pass();
+    all_tests_pass()
 }
 
 #[test_case]
-fn test_breakpoint() {
-    // Testing the int3 (breakpoint) exception handling.
-    println!("Raising a breakpoint interrupt (int3)");
-    x86_64::instructions::interrupts::int3();
+fn failed_assertion() {
+    // This is here just to make sure integration tests work
+    assert_eq!(1, 0);
 }

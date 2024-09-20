@@ -17,7 +17,6 @@ pub mod driver {
 pub mod kernel {
     pub mod global_descriptor_table;
     pub mod interrupts;
-    pub mod panic;
 }
 pub mod test {
     pub mod tester;
@@ -42,5 +41,9 @@ fn test_main() {
 
 pub fn init() {
     kernel::global_descriptor_table::init();
-    kernel::interrupts::init_idt();
+    kernel::interrupts::IDT.load();
+    unsafe {
+        kernel::interrupts::PICS.lock().initialize();
+    }
+    x86_64::instructions::interrupts::enable();
 }

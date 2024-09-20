@@ -10,7 +10,7 @@ use core::panic::PanicInfo;
 
 #[cfg(test)]
 #[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
+pub fn panic(info: &PanicInfo) -> ! {
     test_fail_with_error(info)
 }
 
@@ -45,7 +45,7 @@ pub fn run_test(test: &dyn Testable) {
     test.run();
 }
 
-pub fn pre_tests_run(len:usize){
+pub fn pre_tests_run(len: usize) {
     println!("\nRunning {} tests", len);
     println_serial!("\nRunning {} tests", len);
 }

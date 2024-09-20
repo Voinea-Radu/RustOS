@@ -137,18 +137,21 @@ impl fmt::Write for Writer {
 
 pub fn _print(args: fmt::Arguments, color: Option<Color>) {
     use core::fmt::Write;
-    let old_color = WRITER.lock().color();
 
-    match color {
-        None => {
-            WRITER.lock().write_fmt(args).unwrap();
+    x86_64::instructions::interrupts::without_interrupts(|| {
+        let old_color = WRITER.lock().color();
+
+        match color {
+            None => {
+                WRITER.lock().write_fmt(args).unwrap();
+            }
+            Some(color) => {
+                WRITER.lock().set_color(color);
+                WRITER.lock().write_fmt(args).unwrap();
+                WRITER.lock().set_color(old_color);
+            }
         }
-        Some(color) => {
-            WRITER.lock().set_color(color);
-            WRITER.lock().write_fmt(args).unwrap();
-            WRITER.lock().set_color(old_color);
-        }
-    }
+    })
 }
 
 /**

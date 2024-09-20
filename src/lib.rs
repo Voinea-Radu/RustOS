@@ -6,17 +6,18 @@
 #![feature(abi_x86_interrupt)]
 
 pub mod utils {
-    pub mod statics;
     pub mod color;
+    pub mod statics;
 }
 pub mod driver {
-    pub mod vga;
     pub mod qemu;
     pub mod serial;
+    pub mod vga;
 }
 pub mod kernel {
-    pub mod panic;
+    pub mod global_descriptor_table;
     pub mod interrupts;
+    pub mod panic;
 }
 pub mod test {
     pub mod tester;
@@ -39,6 +40,7 @@ fn test_main() {
     // The function is generated at compile time by the rust compiler for running tests.
 }
 
-pub fn init(){
+pub fn init() {
+    kernel::global_descriptor_table::init();
     kernel::interrupts::init_idt();
 }

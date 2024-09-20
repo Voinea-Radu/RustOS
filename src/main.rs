@@ -4,10 +4,10 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(rust_os::test::tester::test_runner)]
 
-use rust_os::{print, println, println_color};
 use rust_os::utils::color::Color;
 use rust_os::utils::color::ColorCode::LightCyan;
 use rust_os::utils::statics::TROLL_MESSAGE;
+use rust_os::{print, println, println_color};
 
 //noinspection RsUnresolvedPath
 #[no_mangle]
@@ -30,5 +30,11 @@ pub fn main() {
     print!("Hello ");
     println!("Pudel Prost!");
 
-    panic!("Pudelul si Daria au iesit la cafea!");
+    // panic!("Pudelul si Daria au iesit la cafea!");
+
+    stackoverflow()
+}
+
+fn stackoverflow() {
+    stackoverflow();
 }

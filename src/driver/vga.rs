@@ -1,10 +1,12 @@
 use crate::utils::color::Color;
 use crate::utils::color::ColorCode::{Black, White};
-use crate::utils::statics::{BUFFER_HEIGHT, BUFFER_WIDTH};
 use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use volatile::Volatile;
+
+pub const BUFFER_HEIGHT: usize = 25;
+pub const BUFFER_WIDTH: usize = 80;
 
 lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer::new(Color::new(White, Black)));
@@ -39,9 +41,7 @@ impl Writer {
             column_position: 0,
             row_position: 0,
             color: _color,
-            buffer: unsafe {
-                &mut *(0xb8000 as *mut Buffer)
-            },
+            buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
         }
     }
 
@@ -128,14 +128,12 @@ impl Writer {
     }
 }
 
-
 impl fmt::Write for Writer {
     fn write_str(&mut self, string: &str) -> fmt::Result {
         self.write_str(string);
         Ok(())
     }
 }
-
 
 pub fn _print(args: fmt::Arguments, color: Option<Color>) {
     use core::fmt::Write;
@@ -198,4 +196,3 @@ macro_rules! println_color {
         $crate::print_color!("{}\n", format_args!($($arg),*) => $color);
     };
 }
-

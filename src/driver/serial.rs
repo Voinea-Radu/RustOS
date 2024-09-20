@@ -1,31 +1,44 @@
 use crate::utils::color::Color;
-use crate::utils::statics::SERIAL_PORT_1;
 use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use uart_16550::SerialPort;
 
+pub const SERIAL_PORT_1: u16 = 0x3F8; // First serial port address
+
 lazy_static! {
     pub static ref SERIAL_1: Mutex<SerialPort> = {
-        let mut serial_port = unsafe{
-            SerialPort::new(SERIAL_PORT_1)
-        };
+        let mut serial_port = unsafe { SerialPort::new(SERIAL_PORT_1) };
         serial_port.init();
         Mutex::new(serial_port)
     };
 }
-
-
 
 pub fn _print(args: fmt::Arguments, color: Option<Color>) {
     use core::fmt::Write;
 
     match color {
         None => {
-            SERIAL_1.lock().write_fmt(format_args!("{}{}{}", Color::reset_color().get_ansi_color(), args, Color::reset_color().get_ansi_color())).expect("Printing to serial port failed");
+            SERIAL_1
+                .lock()
+                .write_fmt(format_args!(
+                    "{}{}{}",
+                    Color::reset_color().get_ansi_color(),
+                    args,
+                    Color::reset_color().get_ansi_color()
+                ))
+                .expect("Printing to serial port failed");
         }
         Some(color) => {
-            SERIAL_1.lock().write_fmt(format_args!("{}{}{}", color.get_ansi_color(), args, Color::reset_color().get_ansi_color())).expect("Printing to serial port failed");
+            SERIAL_1
+                .lock()
+                .write_fmt(format_args!(
+                    "{}{}{}",
+                    color.get_ansi_color(),
+                    args,
+                    Color::reset_color().get_ansi_color()
+                ))
+                .expect("Printing to serial port failed");
         }
     }
 }

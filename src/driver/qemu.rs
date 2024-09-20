@@ -1,4 +1,4 @@
-use crate::utils::statics::ISA_DEBUG_EXIT_DEVICE_PORT;
+pub const ISA_DEBUG_EXIT_DEVICE_PORT: u16 = 0xf4; // Usually unused device port
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -16,5 +16,5 @@ pub fn exit_qemu(exit_code: QemuExitCode) -> ! {
         port.write(exit_code as u32)
     }
 
-    loop{}
+    loop {}
 }

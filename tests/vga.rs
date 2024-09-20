@@ -9,6 +9,8 @@ use rust_os::println;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    rust_os::init();
+
     test_main();
 
     loop {}
@@ -41,10 +43,9 @@ fn test_println_buffer() {
     println!();
     let string = "test_println_buffer";
     println!("{}", string);
-    let row = WRITER.lock().row_position -1; // last row as we did a \n
+    let row = WRITER.lock().row_position - 1; // last row as we did a \n
     for (index, char) in string.chars().enumerate() {
         let buffer_char = WRITER.lock().buffer.chars[row][index].read().character;
         assert_eq!(char as u8, buffer_char);
     }
 }
-

@@ -113,10 +113,7 @@ impl Color {
     }
 
     pub fn new_simple(_foreground: ColorCode) -> Color {
-        Self::new(
-            _foreground,
-            Black,
-        )
+        Self::new(_foreground, Black)
     }
 
     pub fn reset_color() -> Color {

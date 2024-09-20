@@ -28,5 +28,3 @@ fn test_breakpoint() {
     println!("Raising a breakpoint interrupt (int3)");
     x86_64::instructions::interrupts::int3();
 }
-
-

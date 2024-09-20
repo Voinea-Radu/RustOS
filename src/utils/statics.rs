@@ -34,9 +34,3 @@ $$  /    $$$$$ /       $$ |  $$ | \____$$\ $$  __$$\ $$ | \____$$\
   \$$\ \$$$$$$  |      $$$$$$$  |\$$$$$$$ |$$ |      $$ |\$$$$$$$ |
    \__| \______/       \_______/  \_______|\__|      \__| \_______|
 "#;
-
-pub const BUFFER_HEIGHT: usize = 25;
-pub const BUFFER_WIDTH: usize = 80;
-
-pub const ISA_DEBUG_EXIT_DEVICE_PORT: u16 = 0xf4; // Usually unused device port
-pub const SERIAL_PORT_1:u16 = 0x3F8; // First serial port address

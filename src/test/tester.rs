@@ -24,7 +24,6 @@ fn panic(info: &PanicInfo) -> ! {
     You should be able to find the test logs in the console that you have started qemu with." => Color::new_simple(Yellow));
     println_serial_color!("One or more test(s) failed." => Color::new_simple(Yellow));
 
-
     // TODO Add a better way
     // Sleep for 10s (only for 5 GHz CPU)
     // for _ in 0..50_000_000 {}

@@ -12,6 +12,8 @@ use rust_os::utils::statics::TROLL_MESSAGE;
 //noinspection RsUnresolvedPath
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    rust_os::init();
+
     #[cfg(test)]
     test_main();
 
@@ -27,15 +29,8 @@ pub fn main() {
 
     print!("Hello ");
     println!("Pudel Prost!");
-    panic!("Pudelul si Daria au iesit la cafea!");
+    // panic!("Pudelul si Daria au iesit la cafea!");
+
+    println!("Raising an interrupt (int3)");
+    x86_64::instructions::interrupts::int3();
 }
-
-
-#[cfg(not(test))]
-#[allow(dead_code)]
-fn test_main() {
-    // This is here just for RustRover to not complain about it not existing.
-    // The function is generated at compile time by the rust compiler for running tests.
-}
-
-

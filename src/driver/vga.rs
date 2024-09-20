@@ -159,7 +159,7 @@ print!("Example {} {} {}", 1, 2, 3);
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {
-        $crate::driver::vga::_print(format_args!($($arg)*), None);
+        $crate::driver::vga::_print(format_args!($($arg)*), None)
     };
 }
 

@@ -33,12 +33,12 @@ pub extern "C" fn _start() -> ! {
     loop {}
 }
 
-pub fn init(){
-    kernel::interrupts::init_idt();
-}
-
 #[cfg(not(test))]
 fn test_main() {
     // This is here just for RustRover to not complain about it not existing.
     // The function is generated at compile time by the rust compiler for running tests.
+}
+
+pub fn init(){
+    kernel::interrupts::init_idt();
 }

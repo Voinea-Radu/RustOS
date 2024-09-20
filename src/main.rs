@@ -29,8 +29,6 @@ pub fn main() {
 
     print!("Hello ");
     println!("Pudel Prost!");
-    // panic!("Pudelul si Daria au iesit la cafea!");
 
-    println!("Raising an interrupt (int3)");
-    x86_64::instructions::interrupts::int3();
+    panic!("Pudelul si Daria au iesit la cafea!");
 }

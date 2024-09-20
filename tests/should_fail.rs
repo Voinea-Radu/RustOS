@@ -5,6 +5,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
+use rust_os::hlt_loop;
 use rust_os::test::tester::{all_tests_pass, test_pass};
 
 #[no_mangle]
@@ -13,7 +14,7 @@ pub extern "C" fn _start() -> ! {
 
     test_main();
 
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(not(test))]

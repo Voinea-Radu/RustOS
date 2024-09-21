@@ -10,6 +10,7 @@ pub mod utils {
     pub mod statics;
 }
 pub mod driver {
+    pub mod keyboard;
     pub mod qemu;
     pub mod serial;
     pub mod vga;

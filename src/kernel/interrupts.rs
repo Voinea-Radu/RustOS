@@ -1,5 +1,6 @@
+use crate::driver::keyboard::keyboard_interrupt_handler;
 use crate::kernel::global_descriptor_table::DOUBLE_FAULT_IST_INDEX;
-use crate::{print, println};
+use crate::println;
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
 use spin::Mutex;
@@ -14,6 +15,7 @@ lazy_static! {
 
         idt.breakpoint.set_handler_fn(breakpoint_handler);
         idt[InterruptIndex::Timer as u8].set_handler_fn(timer_handler);
+        idt[InterruptIndex::Keyboard as u8].set_handler_fn(keyboard_interrupt_handler);
 
         unsafe {
             idt.double_fault.
@@ -33,6 +35,7 @@ pub static PICS: Mutex<ChainedPics> = Mutex::new(unsafe {
 #[repr(u8)]
 pub enum InterruptIndex {
     Timer = PIC_1_OFFSET,
+    Keyboard,
 }
 
 extern "x86-interrupt" fn breakpoint_handler(stack_frame: InterruptStackFrame) {
@@ -44,8 +47,8 @@ extern "x86-interrupt" fn double_fault_handler(stack_frame: InterruptStackFrame,
 }
 
 extern "x86-interrupt" fn timer_handler(_stack_frame: InterruptStackFrame) {
-    print!(".");
-    unsafe{
+    // print!(".");
+    unsafe {
         PICS.lock().notify_end_of_interrupt(InterruptIndex::Timer as u8)
     }
 }

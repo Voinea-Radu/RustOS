@@ -41,7 +41,11 @@ pub fn main() {
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    println!("Panicked at {}: {}", info.location().unwrap(), info.message());
+    println!(
+        "Panicked at {}: {}",
+        info.location().unwrap(),
+        info.message()
+    );
     hlt_loop();
 }
 
@@ -50,5 +54,3 @@ fn panic(info: &PanicInfo) -> ! {
 fn panic(info: &PanicInfo) -> ! {
     test::tester::test_fail_with_error(info);
 }
-
-

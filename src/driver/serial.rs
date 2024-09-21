@@ -17,30 +17,28 @@ lazy_static! {
 pub fn _print(args: fmt::Arguments, color: Option<Color>) {
     use core::fmt::Write;
 
-    x86_64::instructions::interrupts::without_interrupts(|| {
-        match color {
-            None => {
-                SERIAL_1
-                    .lock()
-                    .write_fmt(format_args!(
-                        "{}{}{}",
-                        Color::reset_color().get_ansi_color(),
-                        args,
-                        Color::reset_color().get_ansi_color()
-                    ))
-                    .expect("Printing to serial port failed");
-            }
-            Some(color) => {
-                SERIAL_1
-                    .lock()
-                    .write_fmt(format_args!(
-                        "{}{}{}",
-                        color.get_ansi_color(),
-                        args,
-                        Color::reset_color().get_ansi_color()
-                    ))
-                    .expect("Printing to serial port failed");
-            }
+    x86_64::instructions::interrupts::without_interrupts(|| match color {
+        None => {
+            SERIAL_1
+                .lock()
+                .write_fmt(format_args!(
+                    "{}{}{}",
+                    Color::reset_color().get_ansi_color(),
+                    args,
+                    Color::reset_color().get_ansi_color()
+                ))
+                .expect("Printing to serial port failed");
+        }
+        Some(color) => {
+            SERIAL_1
+                .lock()
+                .write_fmt(format_args!(
+                    "{}{}{}",
+                    color.get_ansi_color(),
+                    args,
+                    Color::reset_color().get_ansi_color()
+                ))
+                .expect("Printing to serial port failed");
         }
     });
 }

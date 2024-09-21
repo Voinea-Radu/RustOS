@@ -20,7 +20,7 @@ impl KeyboardListener for Shell {
 
     fn handle_char(&mut self, char: char) {
         match char as u8 {
-            b'\n' =>{
+            b'\n' => {
                 self.handle_return();
             }
             0x8 => {
@@ -62,4 +62,3 @@ impl Shell {
         println!()
     }
 }
-

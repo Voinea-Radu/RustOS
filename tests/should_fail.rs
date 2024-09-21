@@ -24,9 +24,8 @@ fn test_main() {
     // The function is generated at compile time by the rust compiler for running tests.
 }
 
-
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> !{
+fn panic(_info: &PanicInfo) -> ! {
     test_pass();
     all_tests_pass()
 }

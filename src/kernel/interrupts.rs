@@ -18,8 +18,8 @@ lazy_static! {
         idt[InterruptIndex::Keyboard as u8].set_handler_fn(keyboard_interrupt_handler);
 
         unsafe {
-            idt.double_fault.
-                set_handler_fn(double_fault_handler)
+            idt.double_fault
+                .set_handler_fn(double_fault_handler)
                 .set_stack_index(DOUBLE_FAULT_IST_INDEX);
         }
 
@@ -27,9 +27,8 @@ lazy_static! {
     };
 }
 
-pub static PICS: Mutex<ChainedPics> = Mutex::new(unsafe {
-    ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET)
-});
+pub static PICS: Mutex<ChainedPics> =
+    Mutex::new(unsafe { ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET) });
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -42,13 +41,17 @@ extern "x86-interrupt" fn breakpoint_handler(stack_frame: InterruptStackFrame) {
     println!("Breakpoint hit:\n{:#?}", stack_frame);
 }
 
-extern "x86-interrupt" fn double_fault_handler(stack_frame: InterruptStackFrame, _error_code: u64) -> ! {
+extern "x86-interrupt" fn double_fault_handler(
+    stack_frame: InterruptStackFrame,
+    _error_code: u64,
+) -> ! {
     panic!("\nDouble fault:\n{:#?}", stack_frame);
 }
 
 extern "x86-interrupt" fn timer_handler(_stack_frame: InterruptStackFrame) {
     // print!(".");
     unsafe {
-        PICS.lock().notify_end_of_interrupt(InterruptIndex::Timer as u8)
+        PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Timer as u8)
     }
 }

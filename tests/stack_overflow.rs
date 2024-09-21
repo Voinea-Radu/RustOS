@@ -5,7 +5,9 @@
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 use rust_os::driver::qemu::{exit_qemu, QemuExitCode};
-use rust_os::test::tester::{all_tests_pass, pre_tests_run, run_test, test_fail, test_fail_with_error, test_pass};
+use rust_os::test::tester::{
+    all_tests_pass, pre_tests_run, run_test, test_fail, test_fail_with_error, test_pass,
+};
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 #[no_mangle]
@@ -23,7 +25,7 @@ pub extern "C" fn _start() -> ! {
 }
 
 #[panic_handler]
-fn panic(info: &PanicInfo) -> !{
+fn panic(info: &PanicInfo) -> ! {
     test_fail_with_error(info);
 }
 
@@ -48,7 +50,10 @@ lazy_static! {
     };
 }
 
-extern "x86-interrupt" fn test_double_handler(_stack_frame: InterruptStackFrame, _error_code: u64) -> ! {
+extern "x86-interrupt" fn test_double_handler(
+    _stack_frame: InterruptStackFrame,
+    _error_code: u64,
+) -> ! {
     test_pass();
     all_tests_pass();
 }

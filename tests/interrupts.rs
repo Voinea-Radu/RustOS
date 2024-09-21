@@ -5,8 +5,8 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use rust_os::{hlt_loop, println};
 use rust_os::test::tester::test_fail_with_error;
+use rust_os::{hlt_loop, println};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -25,7 +25,7 @@ fn test_main() {
 }
 
 #[panic_handler]
-fn panic(info: &PanicInfo) -> !{
+fn panic(info: &PanicInfo) -> ! {
     test_fail_with_error(info);
 }
 

@@ -7,8 +7,8 @@
 use core::fmt::Write;
 use core::panic::PanicInfo;
 use rust_os::driver::vga::WRITER;
-use rust_os::{hlt_loop, println};
 use rust_os::test::tester::test_fail_with_error;
+use rust_os::{hlt_loop, println};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {

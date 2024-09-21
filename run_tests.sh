@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/binaries/bash
 # The purpose of this script is to run the tests without displaying any of the successful build messages
 clear
 cargo test \

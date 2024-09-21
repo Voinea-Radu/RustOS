@@ -10,7 +10,7 @@ use rust_os::utils::color::ColorCode::LightCyan;
 use rust_os::utils::statics::TROLL_MESSAGE;
 use rust_os::{hlt_loop, print, println, println_color, test};
 
-pub mod kernel{
+pub mod kernel {
     pub mod panic;
 }
 

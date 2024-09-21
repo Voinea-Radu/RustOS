@@ -5,6 +5,9 @@
 #![test_runner(test::tester::test_runner)]
 #![feature(abi_x86_interrupt)]
 
+pub mod binaries {
+    pub mod shell;
+}
 pub mod utils {
     pub mod color;
     pub mod statics;

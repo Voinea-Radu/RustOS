@@ -5,6 +5,8 @@
 #![test_runner(test::tester::test_runner)]
 #![feature(abi_x86_interrupt)]
 
+use bootloader::{entry_point, BootInfo};
+
 pub mod binaries {
     pub mod shell;
 }
@@ -21,27 +23,24 @@ pub mod driver {
 pub mod kernel {
     pub mod global_descriptor_table;
     pub mod interrupts;
+    pub mod memory;
 }
 pub mod test {
     pub mod tester;
 }
 
-#[no_mangle]
 #[cfg(test)]
-pub extern "C" fn _start() -> ! {
+entry_point!(test_kernel_main);
+
+//noinspection RsUnresolvedPath
+#[cfg(test)]
+fn test_kernel_main(_boot_info: &'static BootInfo) -> ! {
     init();
 
     #[cfg(test)]
     test_main();
 
     hlt_loop()
-}
-
-#[cfg(not(test))]
-#[allow(dead_code)]
-fn test_main() {
-    // This is here just for RustRover to not complain about it not existing.
-    // The function is generated at compile time by the rust compiler for running tests.
 }
 
 pub fn init() {

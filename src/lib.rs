@@ -21,6 +21,7 @@ pub mod driver {
     pub mod vga;
 }
 pub mod kernel {
+    pub mod allocator;
     pub mod global_descriptor_table;
     pub mod interrupts;
     pub mod memory;

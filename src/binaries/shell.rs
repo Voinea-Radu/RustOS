@@ -19,19 +19,19 @@ impl KeyboardListener for Shell {
     }
 
     fn handle_char(&mut self, char: char) {
-        if char == '\n' {
-            self.handle_return();
-            return;
+        match char as u8 {
+            b'\n' =>{
+                self.handle_return();
+            }
+            0x8 => {
+                self.handle_backspace();
+            }
+            _ => {
+                self.internal_buffer[self.internal_buffer_index] = char;
+                self.internal_buffer_index += 1;
+                print!("{}", char)
+            }
         }
-
-        if char as u8 == 0x8{
-            self.handle_backspace();
-            return;
-        }
-
-        self.internal_buffer[self.internal_buffer_index] = char;
-        self.internal_buffer_index += 1;
-        print!("{}", char)
     }
 }
 
@@ -44,7 +44,12 @@ impl Shell {
     }
 
     pub fn handle_backspace(&mut self) {
+        if self.internal_buffer_index == 0 {
+            return;
+        }
+
         self.internal_buffer_index -= 1;
+        print!("{}", 0x8 as char);
     }
 
     pub fn handle_return(&mut self) {

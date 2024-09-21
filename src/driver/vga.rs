@@ -54,6 +54,7 @@ impl Writer {
     pub fn write_byte_color(&mut self, byte: u8, color: Color) {
         match byte {
             b'\n' => self.print_new_line(),
+            0x8 => self.handle_backspace(),
             byte => {
                 if self.column_position >= BUFFER_WIDTH {
                     self.print_new_line();
@@ -72,6 +73,22 @@ impl Writer {
         }
     }
 
+    pub fn handle_backspace(&mut self) {
+        let row = self.row_position;
+        let col = self.column_position;
+
+        if col == 0 {
+            return;
+        }
+
+        self.buffer.chars[row][col - 1].write(ScreenChar {
+            character: 0,
+            color: self.color.get_vga_color(),
+        });
+
+        self.column_position -= 1;
+    }
+
     pub fn write_str(&mut self, string: &str) {
         #[allow(deprecated)]
         self.write_str_color(string, self.color);
@@ -82,7 +99,7 @@ impl Writer {
         for byte in string.bytes() {
             match byte {
                 #[allow(deprecated)]
-                0x20..=0x7e | b'\n' => self.write_byte_color(byte, color),
+                0x20..=0x7e | b'\n' | 0x8 => self.write_byte_color(byte, color),
                 _ => self.write_byte(0xfe),
             }
         }

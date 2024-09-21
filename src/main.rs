@@ -8,7 +8,7 @@ use core::panic::PanicInfo;
 use rust_os::utils::color::Color;
 use rust_os::utils::color::ColorCode::LightCyan;
 use rust_os::utils::statics::TROLL_MESSAGE;
-use rust_os::{hlt_loop, print, println, println_color, test};
+use rust_os::{hlt_loop, print, println, println_color};
 
 pub mod kernel {
     pub mod panic;
@@ -52,5 +52,5 @@ fn panic(info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    test::tester::test_fail_with_error(info);
+    rust_os::test::tester::test_fail_with_error(info);
 }

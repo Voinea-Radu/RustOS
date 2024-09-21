@@ -187,10 +187,10 @@ println!("Example {} {} {}", 1, 2, 3);
 #[macro_export]
 macro_rules! println {
     () => {
-        $crate::print!("\n");
+        $crate::print!("\n")
     };
     ($($arg:expr),*) => {
-        $crate::print!("{}\n", format_args!($($arg),*));
+        $crate::print!("{}\n", format_args!($($arg),*))
     };
 }
 
@@ -200,7 +200,7 @@ print_color!("Example {} {} {}", 1, 2, 3 => Color::new(LightRed, Black));
 #[macro_export]
 macro_rules! print_color {
     ($($arg:expr),* => $color:expr) => {
-        $crate::driver::vga::_print(format_args!($($arg),*), Some($color));
+        $crate::driver::vga::_print(format_args!($($arg),*), Some($color))
     };
 }
 
@@ -210,9 +210,9 @@ println_color!("Example {} {} {}", 1, 2, 3 => Color::new(LightRed, Black));
 #[macro_export]
 macro_rules! println_color {
     () => {
-        $crate::print!("\n");
+        $crate::print!("\n")
     };
     ($($arg:expr),* => $color:expr) => {
-        $crate::print_color!("{}\n", format_args!($($arg),*) => $color);
+        $crate::print_color!("{}\n", format_args!($($arg),*) => $color)
     };
 }

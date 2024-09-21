@@ -38,6 +38,7 @@ pub extern "C" fn _start() -> ! {
 }
 
 #[cfg(not(test))]
+#[allow(dead_code)]
 fn test_main() {
     // This is here just for RustRover to not complain about it not existing.
     // The function is generated at compile time by the rust compiler for running tests.

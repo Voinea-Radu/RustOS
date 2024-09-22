@@ -2,17 +2,21 @@
 #![no_std]
 #![no_main]
 
+use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 use rust_os::driver::qemu::{exit_qemu, QemuExitCode};
 use rust_os::test::tester::{
     all_tests_pass, pre_tests_run, run_test, test_fail, test_fail_with_error, test_pass,
 };
+use rust_os::init;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    rust_os::kernel::global_descriptor_table::init();
+entry_point!(test_kernel_main);
+
+//noinspection RsUnresolvedPath
+fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
+    init(boot_info);
     init_test_idt();
 
     pre_tests_run(1);
@@ -31,11 +35,10 @@ fn panic(info: &PanicInfo) -> ! {
 
 #[allow(unconditional_recursion)]
 fn stack_overflow() {
-    pub fn infinite_recursion() {
-        infinite_recursion();
+    pub fn infinite_recursion(count: i64) -> i64 {
+        infinite_recursion(count + 1)
     }
-
-    infinite_recursion();
+    infinite_recursion(0);
 }
 
 lazy_static! {

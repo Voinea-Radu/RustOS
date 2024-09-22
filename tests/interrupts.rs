@@ -5,17 +5,17 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
+use bootloader::{entry_point, BootInfo};
 use rust_os::test::tester::test_fail_with_error;
-use rust_os::{hlt_loop, println};
+use rust_os::{hlt_loop, init, println};
+
+entry_point!(test_kernel_main);
 
 //noinspection RsUnresolvedPath
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    rust_os::init();
-
+fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
+    init(boot_info);
     test_main();
-
-    hlt_loop()
+    hlt_loop();
 }
 
 #[panic_handler]

@@ -1,7 +1,7 @@
 use bootloader::bootinfo::MemoryMap;
 use bootloader::bootinfo::MemoryRegionType::Usable;
 use x86_64::registers::control::Cr3;
-use x86_64::structures::paging::{FrameAllocator, Mapper, OffsetPageTable, Page, PageTable, PageTableFlags, PhysFrame, Size4KiB};
+use x86_64::structures::paging::{FrameAllocator, OffsetPageTable, PageTable, PhysFrame, Size4KiB};
 use x86_64::{PhysAddr, VirtAddr};
 
 pub struct BootInfoFrameAllocator {
@@ -52,16 +52,5 @@ fn active_level4_table(physical_memory_offset: VirtAddr) -> &'static mut PageTab
     unsafe {
         &mut *page_table_pointer
     }
-}
-
-pub fn create_example_mapping(page: Page, mapper: &mut OffsetPageTable, frame_allocator: &mut impl FrameAllocator<Size4KiB>) {
-    let frame = PhysFrame::containing_address(PhysAddr::new(0x8000));
-    let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
-
-    let map_to_result = unsafe {
-        mapper.map_to(page, frame, flags, frame_allocator)
-    };
-
-    map_to_result.expect("Mapping failed").flush();
 }
 

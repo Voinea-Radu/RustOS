@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
-use crate::utils::color::ColorCode::{Black, Reset};
+use alloc::string::String;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ColorCode {
     Reset,
+    Default,
     Black,
     Blue,
     Green,
@@ -32,6 +33,8 @@ impl ColorCode {
     pub fn get_vga_code(&self) -> u8 {
         match self {
             ColorCode::Black => 0,
+            ColorCode::Default => 0,
+            ColorCode::Reset => 0,
             ColorCode::Blue => 1,
             ColorCode::Green => 2,
             ColorCode::Cyan => 3,
@@ -46,16 +49,14 @@ impl ColorCode {
             ColorCode::LightRed => 12,
             ColorCode::Pink => 13,
             ColorCode::Yellow => 14,
-            ColorCode::White => 15,
-            code => {
-                panic!("Tried to access {:?} from vga driver", code);
-            }
+            ColorCode::White => 15
         }
     }
 
     pub fn get_ansi_code_foreground(&self) -> &str {
         match self {
             ColorCode::Reset => "\x1B[0m",
+            ColorCode::Default => "\x1B[39m",
             ColorCode::Black => "\x1B[30m",
             ColorCode::Blue => "\x1B[34m",
             ColorCode::Green => "\x1B[32m",
@@ -77,7 +78,8 @@ impl ColorCode {
 
     pub fn get_ansi_code_background(&self) -> &str {
         match self {
-            ColorCode::Reset => "\x1B[m",
+            ColorCode::Reset => "\x1B[0m",
+            ColorCode::Default => "\x1B[49m",
             ColorCode::Black => "\x1B[40m",
             ColorCode::Blue => "\x1B[44m",
             ColorCode::Green => "\x1B[42m",
@@ -113,23 +115,28 @@ impl Color {
     }
 
     pub fn new_simple(_foreground: ColorCode) -> Color {
-        Self::new(_foreground, Black)
+        Self::new(_foreground, ColorCode::Default)
     }
 
-    pub fn reset_color() -> Color {
-        Color {
-            foreground: Reset,
-            background: Reset,
-        }
+    pub fn reset_ansi_color() -> String {
+        let mut output = String::new();
+
+        output.push_str(ColorCode::Reset.get_ansi_code_foreground());
+        output.push_str(ColorCode::Reset.get_ansi_code_background());
+
+        output
     }
 
     pub fn get_vga_color(&self) -> u8 {
         (self.background.get_vga_code()) << 4 | (self.foreground.get_vga_code())
     }
 
-    pub fn get_ansi_color<'a>(&'a self) -> &'a str {
-        //let output: &str = concatenate(self.foreground.get_ansi_code_foreground(), self.background.get_ansi_code_background(), &mut buffer).unwrap();
-        // TODO Add support for background color as well when dynamic memory management is an option
-        self.foreground.get_ansi_code_foreground()
+    pub fn get_ansi_color(&self) -> String {
+        let mut output = String::new();
+
+        output.push_str(self.foreground.get_ansi_code_foreground());
+        output.push_str(self.background.get_ansi_code_background());
+
+        output
     }
 }

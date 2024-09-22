@@ -6,24 +6,18 @@
 
 use core::fmt::Write;
 use core::panic::PanicInfo;
+use bootloader::{entry_point, BootInfo};
 use rust_os::driver::vga::WRITER;
 use rust_os::test::tester::test_fail_with_error;
-use rust_os::{hlt_loop, println};
+use rust_os::{hlt_loop, init, println};
 
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
-    rust_os::init();
+entry_point!(test_kernel_main);
 
+//noinspection RsUnresolvedPath
+fn test_kernel_main(boot_info: &'static BootInfo) -> ! {
+    init(boot_info);
     test_main();
-
-    hlt_loop()
-}
-
-#[cfg(not(test))]
-#[allow(dead_code)]
-fn test_main() {
-    // This is here just for RustRover to not complain about it not existing.
-    // The function is generated at compile time by the rust compiler for running tests.
+    hlt_loop();
 }
 
 #[panic_handler]

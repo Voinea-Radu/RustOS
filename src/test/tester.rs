@@ -15,8 +15,6 @@ pub fn panic(info: &PanicInfo) -> ! {
 }
 
 pub fn test_runner(tests: &[&dyn Testable]) {
-    println_color!("{}", WELCOME_MESSAGE => Color::new_simple(LightCyan));
-
     pre_tests_run(tests.len());
     for test in tests {
         run_test(*test);

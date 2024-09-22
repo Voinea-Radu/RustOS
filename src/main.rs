@@ -10,15 +10,11 @@ use alloc::rc::Rc;
 use alloc::vec;
 use alloc::vec::Vec;
 use bootloader::{entry_point, BootInfo};
-use core::ops::Add;
 use core::panic::PanicInfo;
-use rust_os::kernel::memory::BootInfoFrameAllocator;
 use rust_os::utils::color::Color;
 use rust_os::utils::color::ColorCode::LightCyan;
 use rust_os::utils::statics::TROLL_MESSAGE;
 use rust_os::{hlt_loop, print, println, println_color};
-use x86_64::structures::paging::Translate;
-use x86_64::VirtAddr;
 
 pub mod kernel {
     pub mod panic;
@@ -28,19 +24,22 @@ entry_point!(kernel_main);
 
 //noinspection RsUnresolvedPath
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    rust_os::init();
-
+    rust_os::init(boot_info);
     #[cfg(test)]
     test_main();
-
     #[cfg(not(test))]
     main();
+    hlt_loop();
+}
 
-    let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mut mapper = rust_os::kernel::memory::init(physical_memory_offset);
-    let mut frame_allocator = BootInfoFrameAllocator::new(&boot_info.memory_map);
+pub fn main() {
+    {
+        println_color!("{}", TROLL_MESSAGE => Color::new_simple(LightCyan));
+        println!("Hello {}", "Pudel Vesel!");
 
-    rust_os::kernel::allocator::init_heap(&mut mapper, &mut frame_allocator).expect("Heap initialization failed");
+        print!("Hello ");
+        println!("Pudel Prost!");
+    }
 
     {
         let heap_value = Box::new(41);
@@ -58,16 +57,6 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         drop(reference_counted);
         println!("reference count is {} now", Rc::strong_count(&cloned_reference));
     }
-
-    hlt_loop()
-}
-
-pub fn main() {
-    println_color!("{}", TROLL_MESSAGE => Color::new_simple(LightCyan));
-    println!("Hello {}", "Pudel Vesel!");
-
-    print!("Hello ");
-    println!("Pudel Prost!");
 
     // panic!("Pudelul si Daria au iesit la cafea!");
 }

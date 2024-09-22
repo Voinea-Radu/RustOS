@@ -143,6 +143,21 @@ impl Writer {
     pub fn reset_color(&mut self) {
         self.set_color(Color::new(White, Black))
     }
+
+    pub fn clear(&mut self) {
+        self.column_position = 0;
+        self.row_position = 0;
+        for x in 0..BUFFER_WIDTH {
+            for y in 0..BUFFER_HEIGHT {
+                let char = ScreenChar {
+                    character: 0,
+                    color: self.color.get_vga_color(),
+                };
+
+                self.buffer.chars[y][x].write(char);
+            }
+        }
+    }
 }
 
 impl fmt::Write for Writer {

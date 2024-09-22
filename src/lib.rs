@@ -15,6 +15,7 @@ use x86_64::VirtAddr;
 extern crate alloc;
 
 pub mod binaries {
+    pub mod builtin_shell_commands;
     pub mod shell;
 }
 pub mod utils {

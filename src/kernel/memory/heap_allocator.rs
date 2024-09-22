@@ -1,13 +1,34 @@
-use linked_list_allocator::LockedHeap;
+use spin::{Mutex, MutexGuard};
 use x86_64::structures::paging::mapper::MapToError;
 use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB};
 use x86_64::VirtAddr;
+use crate::kernel::memory::allocator::fixed_size_block::FixedSizeBlockAllocator;
+use crate::kernel::memory::allocator::linked_list::LinkedListAllocator;
 
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+// static ALLOCATOR: LockedHeap = LockedHeap::empty();
+// static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
+// static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
+static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 
 pub const HEAP_START: usize = 0x_5000_0000_0000;
 pub const HEAP_SIZE: usize = 1024 * 1024; // 1 MB
+
+pub struct Locked<A> {
+    inner: Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Locked {
+            inner: Mutex::new(inner)
+        }
+    }
+
+    pub fn lock(&self) -> MutexGuard<A> {
+        self.inner.lock()
+    }
+}
 
 pub fn init_heap(
     mapper: &mut impl Mapper<Size4KiB>,
@@ -37,4 +58,17 @@ pub fn init_heap(
     }
 
     Ok(())
+}
+
+pub fn align_up(address: usize, alignment: usize) -> usize {
+    let remainder = address % alignment;
+    if remainder == 0 {
+        address
+    } else {
+        address - remainder + alignment
+    }
+}
+
+pub fn fast_align_up(address: usize, alignment: usize) -> usize {
+    (address + alignment - 1) & !(alignment - 1)
 }

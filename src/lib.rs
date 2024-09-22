@@ -4,15 +4,15 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(test::tester::test_runner)]
 #![feature(abi_x86_interrupt)]
+#![feature(const_mut_refs)]
 
+extern crate alloc;
 #[cfg(test)]
 use bootloader::entry_point;
 
 use crate::kernel::memory::frame_allocator::BootInfoFrameAllocator;
 use bootloader::BootInfo;
 use x86_64::VirtAddr;
-
-extern crate alloc;
 
 pub mod binaries {
     pub mod builtin_shell_commands;
@@ -30,6 +30,11 @@ pub mod driver {
 }
 pub mod kernel {
     pub mod memory {
+        pub mod allocator {
+            pub mod bump;
+            pub mod fixed_size_block;
+            pub mod linked_list;
+        }
         pub mod frame_allocator;
         pub mod heap_allocator;
     }

@@ -9,9 +9,9 @@ use alloc::boxed::Box;
 use alloc::vec::Vec;
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
+use rust_os::kernel::memory::heap_allocator::HEAP_SIZE;
 use rust_os::test::tester::test_fail_with_error;
 use rust_os::{hlt_loop, init};
-use rust_os::kernel::memory::heap_allocator::HEAP_SIZE;
 
 entry_point!(test_kernel_main);
 
@@ -55,5 +55,17 @@ fn maximum_allocation() {
         let x = Box::new(i);
         assert_eq!(*x, i);
     }
+}
+
+#[test_case]
+fn maximum_allocation_with_long_life() {
+    let long_life = Box::new(1);
+
+    for i in 0..HEAP_SIZE {
+        let x = Box::new(i);
+        assert_eq!(*x, i);
+    }
+
+    assert_eq!(*long_life, 1);
 }
 

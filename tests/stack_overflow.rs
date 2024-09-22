@@ -6,10 +6,10 @@ use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
 use lazy_static::lazy_static;
 use rust_os::driver::qemu::{exit_qemu, QemuExitCode};
+use rust_os::init;
 use rust_os::test::tester::{
     all_tests_pass, pre_tests_run, run_test, test_fail, test_fail_with_error, test_pass,
 };
-use rust_os::init;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
 
 entry_point!(test_kernel_main);

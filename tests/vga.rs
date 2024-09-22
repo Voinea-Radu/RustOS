@@ -4,9 +4,9 @@
 #![test_runner(rust_os::test::tester::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+use bootloader::{entry_point, BootInfo};
 use core::fmt::Write;
 use core::panic::PanicInfo;
-use bootloader::{entry_point, BootInfo};
 use rust_os::driver::vga::WRITER;
 use rust_os::test::tester::test_fail_with_error;
 use rust_os::{hlt_loop, init, println};

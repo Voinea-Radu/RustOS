@@ -16,11 +16,12 @@ impl BootInfoFrameAllocator {
             next: 0,
         }
     }
-    pub fn usable_frames(&self) -> impl Iterator<Item=PhysFrame> {
+    pub fn usable_frames(&self) -> impl Iterator<Item = PhysFrame> {
         let regions = self.memory_map.iter();
 
         let usable_regions = regions.filter(|region| region.region_type == Usable);
-        let address_ranges = usable_regions.map(|region| region.range.start_addr()..region.range.end_addr());
+        let address_ranges =
+            usable_regions.map(|region| region.range.start_addr()..region.range.end_addr());
         let frame_addresses = address_ranges.flat_map(|region| region.step_by(4096));
 
         frame_addresses.map(|address| PhysFrame::containing_address(PhysAddr::new(address)))
@@ -37,9 +38,7 @@ unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
 
 pub fn init(physical_memory_offset: VirtAddr) -> OffsetPageTable<'static> {
     let level4_table = active_level4_table(physical_memory_offset);
-    unsafe {
-        OffsetPageTable::new(level4_table, physical_memory_offset)
-    }
+    unsafe { OffsetPageTable::new(level4_table, physical_memory_offset) }
 }
 
 fn active_level4_table(physical_memory_offset: VirtAddr) -> &'static mut PageTable {
@@ -49,8 +48,5 @@ fn active_level4_table(physical_memory_offset: VirtAddr) -> &'static mut PageTab
     let virtual_address = physical_memory_offset + physical_address.as_u64();
     let page_table_pointer: *mut PageTable = virtual_address.as_mut_ptr();
 
-    unsafe {
-        &mut *page_table_pointer
-    }
+    unsafe { &mut *page_table_pointer }
 }
-

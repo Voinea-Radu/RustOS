@@ -49,7 +49,7 @@ impl ColorCode {
             ColorCode::LightRed => 12,
             ColorCode::Pink => 13,
             ColorCode::Yellow => 14,
-            ColorCode::White => 15
+            ColorCode::White => 15,
         }
     }
 

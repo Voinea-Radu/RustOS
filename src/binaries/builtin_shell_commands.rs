@@ -26,8 +26,16 @@ pub fn add_command_handler(arguments_string: String) -> Result<(), ShellError> {
         return Ok(());
     }
 
-    let number1: i32 = arguments.get(1).unwrap().parse::<i32>().map_err(|error| ShellError::InvalidArgumentsError)?;
-    let number2: i32 = arguments.get(2).unwrap().parse::<i32>().map_err(|error| ShellError::InvalidArgumentsError)?;
+    let number1: i32 = arguments
+        .get(1)
+        .unwrap()
+        .parse::<i32>()
+        .map_err(|_error| ShellError::InvalidArgumentsError)?;
+    let number2: i32 = arguments
+        .get(2)
+        .unwrap()
+        .parse::<i32>()
+        .map_err(|_error| ShellError::InvalidArgumentsError)?;
 
     println!("{} + {} = {}", number1, number2, number1 + number2);
     Ok(())

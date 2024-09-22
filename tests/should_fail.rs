@@ -4,10 +4,10 @@
 #![test_runner(rust_os::test::tester::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-use core::panic::PanicInfo;
 use bootloader::{entry_point, BootInfo};
-use rust_os::{hlt_loop, init};
+use core::panic::PanicInfo;
 use rust_os::test::tester::{all_tests_pass, test_pass};
+use rust_os::{hlt_loop, init};
 
 entry_point!(test_kernel_main);
 

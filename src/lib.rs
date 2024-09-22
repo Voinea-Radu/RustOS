@@ -30,8 +30,8 @@ pub mod driver {
 }
 pub mod kernel {
     pub mod memory {
-        pub mod heap_allocator;
         pub mod frame_allocator;
+        pub mod heap_allocator;
     }
     pub mod global_descriptor_table;
     pub mod interrupts;
@@ -64,7 +64,8 @@ pub fn init(boot_info: &'static BootInfo) {
     let mut mapper = kernel::memory::frame_allocator::init(physical_memory_offset);
     let mut frame_allocator = BootInfoFrameAllocator::new(&boot_info.memory_map);
 
-    kernel::memory::heap_allocator::init_heap(&mut mapper, &mut frame_allocator).expect("Heap initialization failed");
+    kernel::memory::heap_allocator::init_heap(&mut mapper, &mut frame_allocator)
+        .expect("Heap initialization failed");
 }
 
 pub fn hlt_loop() -> ! {

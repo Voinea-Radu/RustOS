@@ -9,7 +9,10 @@ static ALLOCATOR: LockedHeap = LockedHeap::empty();
 pub const HEAP_START: usize = 0x_5000_0000_0000;
 pub const HEAP_SIZE: usize = 1024 * 1024; // 1 MB
 
-pub fn init_heap(mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl FrameAllocator<Size4KiB>) -> Result<(), MapToError<Size4KiB>> {
+pub fn init_heap(
+    mapper: &mut impl Mapper<Size4KiB>,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) -> Result<(), MapToError<Size4KiB>> {
     let page_range = {
         let heap_start = VirtAddr::new(HEAP_START as u64);
         let heap_end = heap_start + HEAP_SIZE as u64 - 1u64;

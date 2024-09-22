@@ -53,9 +53,15 @@ pub fn main() {
 
         let reference_counted = Rc::new(vec![1, 2, 3]);
         let cloned_reference = reference_counted.clone();
-        println!("current reference count is {}", Rc::strong_count(&cloned_reference));
+        println!(
+            "current reference count is {}",
+            Rc::strong_count(&cloned_reference)
+        );
         drop(reference_counted);
-        println!("reference count is {} now", Rc::strong_count(&cloned_reference));
+        println!(
+            "reference count is {} now",
+            Rc::strong_count(&cloned_reference)
+        );
     }
 
     // panic!("Pudelul si Daria au iesit la cafea!");

@@ -44,7 +44,10 @@ extern "x86-interrupt" fn breakpoint_handler(stack_frame: InterruptStackFrame) {
     println!("Breakpoint hit:\n{:#?}", stack_frame);
 }
 
-extern "x86-interrupt" fn double_fault_handler(stack_frame: InterruptStackFrame, _error_code: u64) -> ! {
+extern "x86-interrupt" fn double_fault_handler(
+    stack_frame: InterruptStackFrame,
+    _error_code: u64,
+) -> ! {
     panic!("\nDouble fault:\n{:#?}", stack_frame);
 }
 
@@ -56,7 +59,10 @@ extern "x86-interrupt" fn timer_handler(_stack_frame: InterruptStackFrame) {
     }
 }
 
-extern "x86-interrupt" fn page_fault_handler(stack_frame: InterruptStackFrame, error_code: PageFaultErrorCode) {
+extern "x86-interrupt" fn page_fault_handler(
+    stack_frame: InterruptStackFrame,
+    error_code: PageFaultErrorCode,
+) {
     // print!(".");
 
     println!("Exception        : Page Fault");

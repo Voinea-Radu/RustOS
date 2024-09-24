@@ -1,4 +1,4 @@
-use crate::utils::color::Color;
+use crate::utils::color::AnsiColor;
 use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
@@ -14,9 +14,9 @@ lazy_static! {
     };
 }
 
-pub fn _print(args: fmt::Arguments, color: Option<Color>) {
+pub fn _print(args: fmt::Arguments, color: Option<AnsiColor>) {
     use core::fmt::Write;
-    let reset_color: Color = Color::new_reset();
+    let reset_color: AnsiColor = AnsiColor::new_reset();
 
     x86_64::instructions::interrupts::without_interrupts(|| match color {
         None => {

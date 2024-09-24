@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 
-use crate::utils::color::{AnsiColor, Color};
+use crate::utils::color::{AnsiColorType, AnsiColor};
 use core::panic::PanicInfo;
 
 pub const CONFIG: bootloader_api::BootloaderConfig = {
@@ -11,6 +11,10 @@ pub const CONFIG: bootloader_api::BootloaderConfig = {
 };
 
 pub mod driver {
+    pub mod display {
+        pub mod frame_buffer;
+    }
+    pub mod logger;
     pub mod qemu;
     pub mod serial;
 }
@@ -25,7 +29,7 @@ fn panic(info: &PanicInfo) -> ! {
         "Panicked at {}: {}",
         info.location().unwrap(),
         info.message()
-        => Color::new_simple(AnsiColor::LightRed)
+        => AnsiColor::new_simple(AnsiColorType::LightRed)
     );
 
     hlt_loop();

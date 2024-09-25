@@ -1,3 +1,4 @@
+use crate::driver::display::frame_buffer::FRAME_BUFFER_WRITER;
 use crate::println_serial;
 
 trait ImageFormat {
@@ -26,12 +27,6 @@ impl PPMFormat {
         let (width, cursor) = Self::read_number(data, cursor, ' ');
         let (height, cursor) = Self::read_number(data, cursor, '\n');
         let (possible_colors, cursor) = Self::read_number(data, cursor, '\n');
-
-        println_serial!("\
-        P{p_value}\n\
-        {width} {height}\n\
-        {possible_colors}\
-        ");
 
         let data = &data[cursor..data.len()];
 
@@ -77,5 +72,20 @@ impl PPMFormat {
 
     pub fn possible_colors(&self) -> usize {
         self.possible_colors
+    }
+
+    pub fn render(&self, x: usize, y: usize) {
+        let mut frame_buffer_writer = FRAME_BUFFER_WRITER.lock();
+
+        for y_offset in 0..self.height() {
+            for x_offset in 0..self.width() {
+                frame_buffer_writer.draw_pixel_raw
+                (x + x_offset, y + y_offset,
+                 self.data[y_offset * self.width() * 3 + x_offset * 3],
+                 self.data[y_offset * self.width() * 3 + x_offset * 3 + 1],
+                 self.data[y_offset * self.width() * 3 + x_offset * 3 + 2],
+                )
+            }
+        }
     }
 }

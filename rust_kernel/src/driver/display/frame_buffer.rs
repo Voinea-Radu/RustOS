@@ -1,7 +1,20 @@
 use bootloader_api::info::PixelFormat;
+use spin::Mutex;
+
+pub static FRAME_BUFFER_WRITER: Mutex<FrameBufferWriter> = Mutex::new(
+    FrameBufferWriter {
+        enabled: false,
+        frame_buffer: &mut [],
+        pixel_format: PixelFormat::Rgb,
+        bytes_per_pixel: 0,
+        width: 0,
+        height: 0,
+    }
+);
 
 pub struct FrameBufferWriter {
-    framebuffer: &'static mut [u8],
+    enabled: bool,
+    frame_buffer: &'static mut [u8],
     pixel_format: PixelFormat,
     bytes_per_pixel: usize,
     width: usize,
@@ -26,17 +39,27 @@ impl Color {
 
 impl FrameBufferWriter {
     pub fn new(
-        framebuffer: &'static mut [u8],
+        frame_buffer: &'static mut [u8],
         pixel_format: PixelFormat, bytes_per_pixel: usize,
         width: usize, height: usize,
     ) -> Self {
         Self {
-            framebuffer,
+            enabled: true,
+            frame_buffer,
             pixel_format,
             bytes_per_pixel,
             width,
             height,
         }
+    }
+
+    pub fn update(&mut self, frame_buffer_writer: FrameBufferWriter) {
+        self.enabled = frame_buffer_writer.enabled;
+        self.frame_buffer = frame_buffer_writer.frame_buffer;
+        self.pixel_format = frame_buffer_writer.pixel_format;
+        self.bytes_per_pixel = frame_buffer_writer.bytes_per_pixel;
+        self.width = frame_buffer_writer.width;
+        self.height = frame_buffer_writer.width;
     }
 
     pub fn draw_rectangle(&mut self, x: usize, y: usize, length: usize, height: usize, color: Color) {
@@ -61,6 +84,10 @@ impl FrameBufferWriter {
     }
 
     pub fn draw_pixel_raw(&mut self, x: usize, y: usize, red: u8, green: u8, blue: u8) {
+        if !self.enabled {
+            return;
+        }
+
         let color_bytes: [u8; 4] = match self.pixel_format {
             PixelFormat::Rgb => [red, green, blue, 0],
             PixelFormat::Bgr => [blue, green, red, 0],
@@ -71,11 +98,11 @@ impl FrameBufferWriter {
             let real_x: usize = x * self.bytes_per_pixel;
             let real_y: usize = y * self.width * self.bytes_per_pixel;
 
-            if (real_y + real_x + byte_index) >= self.framebuffer.len() {
+            if (real_y + real_x + byte_index) >= self.frame_buffer.len() {
                 return;
             }
 
-            self.framebuffer[real_y + real_x + byte_index] = *byte;
+            self.frame_buffer[real_y + real_x + byte_index] = *byte;
         }
     }
 }

@@ -70,6 +70,11 @@ impl FrameBufferWriter {
         for (byte_index, byte) in color_bytes.iter().enumerate() {
             let real_x: usize = x * self.bytes_per_pixel;
             let real_y: usize = y * self.width * self.bytes_per_pixel;
+
+            if (real_y + real_x + byte_index) >= self.framebuffer.len() {
+                return;
+            }
+
             self.framebuffer[real_y + real_x + byte_index] = *byte;
         }
     }

@@ -13,6 +13,7 @@ pub const CONFIG: bootloader_api::BootloaderConfig = {
 pub mod driver {
     pub mod display {
         pub mod frame_buffer;
+        pub mod image;
     }
     pub mod logger;
     pub mod qemu;

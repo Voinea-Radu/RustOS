@@ -1,6 +1,8 @@
 #![no_std]
 #![no_main]
+extern crate alloc;
 
+use alloc::boxed::Box;
 use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 use bootloader_api::{entry_point, BootInfo};
 use rust_kernel::driver::display::frame_buffer::{Color, FrameBufferWriter};
@@ -11,12 +13,19 @@ use rust_kernel::{hlt_loop, println_serial, println_serial_color, CONFIG};
 pub static FONT: &[u8] = include_bytes!("../assets/font/noto_sans_mono.ppm");
 pub static TROLL1: &[u8] = include_bytes!("../assets/troll1.ppm");
 pub static TROLL2: &[u8] = include_bytes!("../assets/troll2.ppm");
-//14..
+
 entry_point!(kernel_main, config = &CONFIG);
 
 fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
-    println_serial_color!("hello" => AnsiColor::new_simple(AnsiColorType::Red));
+    let physical_memory_offset = boot_info.physical_memory_offset.take().expect("Failed to find physical memory offset");
+    let memory_regions = &boot_info.memory_regions;
 
+    rust_kernel::init(physical_memory_offset, memory_regions);
+
+    let data = Box::new(1);
+    println_serial!("{}", *data);
+
+    println_serial_color!("hello" => AnsiColor::new_simple(AnsiColorType::Red));
 
     println_serial!("{}", FONT.len());
 

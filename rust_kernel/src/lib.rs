@@ -7,7 +7,7 @@ use crate::utils::color::{AnsiColor, AnsiColorType};
 use core::panic::PanicInfo;
 use bootloader_api::BootInfo;
 use bootloader_api::config::Mapping;
-use bootloader_api::info::{FrameBufferInfo, MemoryRegions, PixelFormat};
+use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 use x86_64::VirtAddr;
 use crate::driver::display::frame_buffer::{FrameBufferWriter, FRAME_BUFFER_WRITER};
 use crate::memory::frame_allocator::BootInfoFrameAllocator;
@@ -21,6 +21,7 @@ pub const CONFIG: bootloader_api::BootloaderConfig = {
 
 pub mod driver {
     pub mod display {
+        pub mod font;
         pub mod frame_buffer;
         pub mod image;
     }

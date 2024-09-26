@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
+
 fn main() {
+    rerun();
+
     let out_dir = PathBuf::from(std::env::var_os("OUT_DIR").unwrap());
     let kernel = PathBuf::from(std::env::var_os("CARGO_BIN_FILE_RUST_KERNEL_rust_kernel").unwrap());
 
@@ -12,4 +15,11 @@ fn main() {
 
     println!("cargo:rustc-env=UEFI_PATH={}", uefi_path.display());
     println!("cargo:rustc-env=BIOS_PATH={}", bios_path.display());
+}
+
+fn rerun() {
+    #[cfg(unix)]
+    println!("cargo:rerun-if-changed=/dev/null");
+    #[cfg(windows)]
+    println!("cargo:rerun-if-changed=NUL");
 }

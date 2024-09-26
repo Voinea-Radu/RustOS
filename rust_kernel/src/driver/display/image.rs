@@ -1,5 +1,5 @@
 use crate::driver::display::frame_buffer::FRAME_BUFFER_WRITER;
-use crate::println_serial;
+use core::cmp::min;
 
 trait ImageFormat {
     fn render();
@@ -11,6 +11,27 @@ pub struct PPMFormat {
     height: usize,
     possible_colors: usize,
     pub data: &'static [u8],
+}
+
+pub trait AssetAtlas {
+    fn get_asset_width(&self) -> usize;
+    fn get_asset_height(&self) -> usize;
+    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize);
+
+    /**
+    @arg x - the x position to render at
+    @arg y - the y position to render at
+    @arg local_x - local_x'th row in the AssetAtlas
+    @arg local_y - local_y'th column in the AssetAtlas
+    **/
+    fn render_asset(&self, x: usize, y: usize, local_x: usize, local_y: usize) {
+        self.render_box(
+            x, y,
+            local_x * self.get_asset_width(),
+            local_y * self.get_asset_height(),
+            self.get_asset_width(), self.get_asset_height(),
+        );
+    }
 }
 
 impl PPMFormat {
@@ -84,6 +105,24 @@ impl PPMFormat {
                  self.data[y_offset * self.width() * 3 + x_offset * 3],
                  self.data[y_offset * self.width() * 3 + x_offset * 3 + 1],
                  self.data[y_offset * self.width() * 3 + x_offset * 3 + 2],
+                )
+            }
+        }
+    }
+
+    pub fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize) {
+        let mut frame_buffer_writer = FRAME_BUFFER_WRITER.lock();
+
+        for y_offset in 0..min(self.height(), box_height) {
+            for x_offset in 0..min(self.width(), box_width) {
+                let first_byte_index: usize = (y_offset + box_y) * 3 * self.width() + (x_offset + box_x) * 3;
+
+                frame_buffer_writer.draw_pixel_raw(
+                    x + x_offset,
+                    y + y_offset,
+                    self.data[first_byte_index],
+                    self.data[first_byte_index + 1],
+                    self.data[first_byte_index + 2],
                 )
             }
         }

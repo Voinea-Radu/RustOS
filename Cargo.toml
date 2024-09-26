@@ -5,6 +5,7 @@ edition = "2021"
 authors = [
     "Voinea Radu <contact@voinearadu.com>"
 ]
+build = "build.rs"
 
 [build-dependencies]
 bootloader = "=0.11.7"

@@ -1,13 +1,14 @@
 use log::{Metadata, Record};
 
-pub struct Logger{}
+pub struct Logger{
+}
 
 impl log::Log for Logger{
-    fn enabled(&self, metadata: &Metadata) -> bool {
+    fn enabled(&self, _metadata: &Metadata) -> bool {
         true
     }
 
-    fn log(&self, record: &Record) {
+    fn log(&self, _record: &Record) {
     }
 
     fn flush(&self) {

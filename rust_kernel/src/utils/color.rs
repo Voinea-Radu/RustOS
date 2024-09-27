@@ -98,11 +98,11 @@ impl AnsiColor {
         }
     }
 
-    pub fn get_foreground(&self) ->&str{
+    pub fn get_foreground(&self) -> &str {
         self.foreground.as_foreground()
     }
 
-    pub fn get_background(&self) -> &str{
+    pub fn get_background(&self) -> &str {
         self.background.as_background()
     }
 }

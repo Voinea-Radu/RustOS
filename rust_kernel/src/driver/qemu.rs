@@ -1,5 +1,5 @@
-use x86_64::instructions::port::Port;
 use crate::hlt_loop;
+use x86_64::instructions::port::Port;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]

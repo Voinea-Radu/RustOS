@@ -1,8 +1,8 @@
-use spin::{Mutex, MutexGuard};
+use crate::memory::allocator::fixed_size_block::FixedSizeBlockAllocator;
 use x86_64::structures::paging::mapper::MapToError;
 use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB};
 use x86_64::VirtAddr;
-use crate::memory::allocator::fixed_size_block::FixedSizeBlockAllocator;
+use crate::utils::locked::Locked;
 
 #[global_allocator]
 static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
@@ -10,21 +10,6 @@ static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAl
 pub const HEAP_START: usize = 0x_5000_0000_0000;
 pub const HEAP_SIZE: usize = 1024 * 1024; // 1 MB
 
-pub struct Locked<A> {
-    inner: Mutex<A>,
-}
-
-impl<A> Locked<A> {
-    pub const fn new(inner: A) -> Self {
-        Locked {
-            inner: Mutex::new(inner)
-        }
-    }
-
-    pub fn lock(&self) -> MutexGuard<A> {
-        self.inner.lock()
-    }
-}
 
 pub fn init(
     mapper: &mut impl Mapper<Size4KiB>,

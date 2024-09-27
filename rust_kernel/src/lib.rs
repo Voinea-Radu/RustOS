@@ -1,16 +1,24 @@
 #![no_std]
 #![no_main]
+
 extern crate alloc;
 
+use crate::driver::display::font::{Cursor, Font, CURSOR};
+use crate::driver::display::frame_buffer::{FrameBufferWriter, FRAME_BUFFER_WRITER};
+use crate::driver::display::image::PPMFormat;
+use crate::driver::logger::Logger;
+use crate::memory::frame_allocator::BootInfoFrameAllocator;
 use crate::memory::{frame_allocator, heap_allocator};
 use crate::utils::color::{AnsiColor, AnsiColorType};
-use core::panic::PanicInfo;
-use bootloader_api::BootInfo;
 use bootloader_api::config::Mapping;
 use bootloader_api::info::{FrameBufferInfo, PixelFormat};
+use bootloader_api::BootInfo;
+use core::panic::PanicInfo;
 use x86_64::VirtAddr;
-use crate::driver::display::frame_buffer::{FrameBufferWriter, FRAME_BUFFER_WRITER};
-use crate::memory::frame_allocator::BootInfoFrameAllocator;
+
+pub static FONT_DATA: &[u8] = include_bytes!("../assets/fonts/noto_sans_mono.ppm");
+pub static TROLL1_DATA: &[u8] = include_bytes!("../assets/images/troll1.ppm");
+pub static TROLL2_DATA: &[u8] = include_bytes!("../assets/images/troll2.ppm");
 
 pub const CONFIG: bootloader_api::BootloaderConfig = {
     let mut config = bootloader_api::BootloaderConfig::new_default();
@@ -38,6 +46,7 @@ pub mod memory {
 }
 pub mod utils {
     pub mod color;
+    pub mod locked;
 }
 
 #[panic_handler]
@@ -59,7 +68,12 @@ pub fn hlt_loop() -> ! {
 }
 
 pub fn init(boot_info: &'static mut BootInfo) {
-    let physical_memory_offset = VirtAddr::new(boot_info.physical_memory_offset.take().expect("Failed to find physical memory offset"));
+    let physical_memory_offset = VirtAddr::new(
+        boot_info
+            .physical_memory_offset
+            .take()
+            .expect("Failed to find physical memory offset"),
+    );
     let mut mapper = frame_allocator::init(physical_memory_offset);
     let mut frame_allocator = BootInfoFrameAllocator::new(&boot_info.memory_regions);
 
@@ -67,7 +81,7 @@ pub fn init(boot_info: &'static mut BootInfo) {
 
     match boot_info.framebuffer.take() {
         None => {
-            println_serial!("framebuffer not found");
+            println_serial!("framebuffer not found in boot_info");
         }
         Some(frame_buffer) => {
             let frame_buffer_info: FrameBufferInfo = frame_buffer.info();
@@ -76,14 +90,18 @@ pub fn init(boot_info: &'static mut BootInfo) {
             let bytes_per_pixel: usize = frame_buffer_info.bytes_per_pixel;
             let pixel_format: PixelFormat = frame_buffer_info.pixel_format;
 
-            let buffer_writer: FrameBufferWriter = FrameBufferWriter::new(
-                frame_buffer.into_buffer(),
-                pixel_format,
-                bytes_per_pixel,
-                screen_width,
-                screen_height,
-            );
-            FRAME_BUFFER_WRITER.lock().update(buffer_writer);
+            unsafe {
+                FRAME_BUFFER_WRITER.lock().update(FrameBufferWriter::new(
+                    frame_buffer.into_buffer(),
+                    pixel_format,
+                    bytes_per_pixel,
+                    screen_width,
+                    screen_height,
+                ));
+            }
         }
     }
+
+    CURSOR.lock().update(Cursor::new(Font::new(PPMFormat::new(FONT_DATA))));
+    Logger::init();
 }

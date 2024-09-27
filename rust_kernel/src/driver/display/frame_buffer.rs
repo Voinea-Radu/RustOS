@@ -1,25 +1,7 @@
+use crate::utils::locked::Locked;
 use bootloader_api::info::PixelFormat;
-use spin::Mutex;
 
-pub static FRAME_BUFFER_WRITER: Mutex<FrameBufferWriter> = Mutex::new(
-    FrameBufferWriter {
-        enabled: false,
-        frame_buffer: &mut [],
-        pixel_format: PixelFormat::Rgb,
-        bytes_per_pixel: 0,
-        width: 0,
-        height: 0,
-    }
-);
-
-pub struct FrameBufferWriter {
-    enabled: bool,
-    frame_buffer: &'static mut [u8],
-    pixel_format: PixelFormat,
-    bytes_per_pixel: usize,
-    width: usize,
-    height: usize,
-}
+pub static FRAME_BUFFER_WRITER: Locked<FrameBufferWriter> = Locked::new(FrameBufferWriter::default());
 
 pub struct Color {
     red: u8,
@@ -29,22 +11,37 @@ pub struct Color {
 
 impl Color {
     pub fn new(red: u8, green: u8, blue: u8) -> Self {
-        Self {
-            red,
-            green,
-            blue,
-        }
+        Self { red, green, blue }
     }
 }
 
+pub struct FrameBufferWriter {
+    frame_buffer: &'static mut [u8],
+    pixel_format: PixelFormat,
+    bytes_per_pixel: usize,
+    width: usize,
+    height: usize,
+}
+
 impl FrameBufferWriter {
-    pub fn new(
+    pub const fn default() -> Self {
+        Self {
+            frame_buffer: &mut [],
+            pixel_format: PixelFormat::Rgb,
+            bytes_per_pixel: 0,
+            width: 0,
+            height: 0,
+        }
+    }
+
+    pub const fn new(
         frame_buffer: &'static mut [u8],
-        pixel_format: PixelFormat, bytes_per_pixel: usize,
-        width: usize, height: usize,
+        pixel_format: PixelFormat,
+        bytes_per_pixel: usize,
+        width: usize,
+        height: usize,
     ) -> Self {
         Self {
-            enabled: true,
             frame_buffer,
             pixel_format,
             bytes_per_pixel,
@@ -53,19 +50,31 @@ impl FrameBufferWriter {
         }
     }
 
-    pub fn update(&mut self, frame_buffer_writer: FrameBufferWriter) {
-        self.enabled = frame_buffer_writer.enabled;
-        self.frame_buffer = frame_buffer_writer.frame_buffer;
-        self.pixel_format = frame_buffer_writer.pixel_format;
-        self.bytes_per_pixel = frame_buffer_writer.bytes_per_pixel;
-        self.width = frame_buffer_writer.width;
-        self.height = frame_buffer_writer.width;
+    pub fn width(&self) -> usize {
+        self.width
     }
 
-    pub fn draw_rectangle(&mut self, x: usize, y: usize, length: usize, height: usize, color: Color) {
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
+    pub fn draw_rectangle(
+        &mut self,
+        x: usize,
+        y: usize,
+        length: usize,
+        height: usize,
+        color: Color,
+    ) {
         for x_offset in 0..length {
             for y_offset in 0..height {
-                self.draw_pixel_raw(x + x_offset, y + y_offset, color.red, color.green, color.blue);
+                self.draw_pixel_raw(
+                    x + x_offset,
+                    y + y_offset,
+                    color.red,
+                    color.green,
+                    color.blue,
+                );
             }
         }
     }
@@ -84,14 +93,10 @@ impl FrameBufferWriter {
     }
 
     pub fn draw_pixel_raw(&mut self, x: usize, y: usize, red: u8, green: u8, blue: u8) {
-        if !self.enabled {
-            return;
-        }
-
         let color_bytes: [u8; 4] = match self.pixel_format {
             PixelFormat::Rgb => [red, green, blue, 0],
             PixelFormat::Bgr => [blue, green, red, 0],
-            _ => panic!("Unknown / Unsupported pixel format in frame buffer.")
+            _ => panic!("Unknown / Unsupported pixel format in frame buffer."),
         };
 
         for (byte_index, byte) in color_bytes.iter().enumerate() {
@@ -105,4 +110,13 @@ impl FrameBufferWriter {
             self.frame_buffer[real_y + real_x + byte_index] = *byte;
         }
     }
+
+    pub fn update(&mut self, new_data: FrameBufferWriter) {
+        self.frame_buffer = new_data.frame_buffer;
+        self.pixel_format = new_data.pixel_format;
+        self.bytes_per_pixel = new_data.bytes_per_pixel;
+        self.width = new_data.width;
+        self.height = new_data.width;
+    }
 }
+

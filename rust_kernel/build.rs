@@ -22,7 +22,7 @@ fn generate_fonts() {
     let output = std::process::Command::new("python3")
         .arg("assets/render/fonts.py")
         .arg("assets/fonts")
-        .arg("12")
+        .arg("13")
         .output()
         .expect("Failed to generate fonts");
 

@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageFont
 from PIL.FontFile import FontFile
 from PIL.ImageFont import FreeTypeFont
 
-START_RANGE = 33
+START_RANGE = 32
 END_RANGE = 126
 
 
@@ -57,7 +57,7 @@ def generate_font_images(font: FreeTypeFont):
     for char in f"P6\n{max_width} {max_height * get_characters_count()}\n255\n":
         bytes_array.append(ord(char))
 
-    for i in range(33, 126 + 1):
+    for i in range(START_RANGE, END_RANGE + 1):
         bytes_array += get_bytes_for_char(font, chr(i))
 
     with open(f"{font_name}.ppm", "wb") as file:

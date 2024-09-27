@@ -1,11 +1,8 @@
-use crate::driver::display::frame_buffer::FRAME_BUFFER_WRITER;
+use crate::driver::display::frame_buffer::{Color, FRAME_BUFFER_WRITER};
 use core::cmp::min;
 
-trait ImageFormat {
-    fn render();
-}
-
 pub struct PPMFormat {
+    #[allow(unused)]
     p_value: u8,
     width: usize,
     height: usize,
@@ -16,15 +13,7 @@ pub struct PPMFormat {
 pub trait AssetAtlas {
     fn get_asset_width(&self) -> usize;
     fn get_asset_height(&self) -> usize;
-    fn render_box(
-        &self,
-        x: usize,
-        y: usize,
-        box_x: usize,
-        box_y: usize,
-        box_width: usize,
-        box_height: usize,
-    );
+    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color);
 
     /**
     @arg x - the x position to render at
@@ -32,7 +21,7 @@ pub trait AssetAtlas {
     @arg local_x - local_x'th row in the AssetAtlas
     @arg local_y - local_y'th column in the AssetAtlas
     **/
-    fn render_asset(&self, x: usize, y: usize, local_x: usize, local_y: usize) {
+    fn render_asset(&self, x: usize, y: usize, local_x: usize, local_y: usize, color: Color) {
         self.render_box(
             x,
             y,
@@ -40,6 +29,7 @@ pub trait AssetAtlas {
             local_y * self.get_asset_height(),
             self.get_asset_width(),
             self.get_asset_height(),
+            color
         );
     }
 }
@@ -131,30 +121,29 @@ impl PPMFormat {
         }
     }
 
-    pub fn render_box(
-        &self,
-        x: usize,
-        y: usize,
-        box_x: usize,
-        box_y: usize,
-        box_width: usize,
-        box_height: usize,
-    ) {
+    pub fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color) {
         let mut frame_buffer_writer = FRAME_BUFFER_WRITER.lock();
 
         for y_offset in 0..min(self.height(), box_height) {
             for x_offset in 0..min(self.width(), box_width) {
-                let first_byte_index: usize =
-                    (y_offset + box_y) * 3 * self.width() + (x_offset + box_x) * 3;
+                let first_byte_index: usize = (y_offset + box_y) * 3 * self.width() + (x_offset + box_x) * 3;
+
+                let red = Self::apply_hue(self.data[first_byte_index + 0], color.red);
+                let green = Self::apply_hue(self.data[first_byte_index + 1], color.green);
+                let blue = Self::apply_hue(self.data[first_byte_index + 2], color.blue);
 
                 frame_buffer_writer.draw_pixel_raw(
-                    x + x_offset,
-                    y + y_offset,
-                    self.data[first_byte_index],
-                    self.data[first_byte_index + 1],
-                    self.data[first_byte_index + 2],
+                    x + x_offset, y + y_offset,
+                    red,
+                    green,
+                    blue,
                 )
             }
         }
+    }
+
+    #[inline]
+    pub fn apply_hue(base: u8, color: u8) -> u8 {
+       ((255 - base) as usize * color as usize / 255) as u8
     }
 }

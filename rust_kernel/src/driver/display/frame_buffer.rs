@@ -1,12 +1,14 @@
+use crate::driver::display::font::CURSOR;
 use crate::utils::locked::Locked;
 use bootloader_api::info::PixelFormat;
 
-pub static FRAME_BUFFER_WRITER: Locked<FrameBufferWriter> = Locked::new(FrameBufferWriter::default());
+pub static FRAME_BUFFER_WRITER: Locked<FrameBufferWriter> =
+    Locked::new(FrameBufferWriter::default());
 
 pub struct Color {
-    red: u8,
-    green: u8,
-    blue: u8,
+    pub(crate) red: u8,
+    pub(crate) green: u8,
+    pub(crate) blue: u8,
 }
 
 impl Color {
@@ -99,16 +101,15 @@ impl FrameBufferWriter {
             _ => panic!("Unknown / Unsupported pixel format in frame buffer."),
         };
 
-        for (byte_index, byte) in color_bytes.iter().enumerate() {
-            let real_x: usize = x * self.bytes_per_pixel;
-            let real_y: usize = y * self.width * self.bytes_per_pixel;
+        let real_x: usize = x * self.bytes_per_pixel;
+        let real_y: usize = y * self.width * self.bytes_per_pixel;
 
-            if (real_y + real_x + byte_index) >= self.frame_buffer.len() {
-                return;
-            }
-
-            self.frame_buffer[real_y + real_x + byte_index] = *byte;
+        if (real_y + real_x + self.bytes_per_pixel) >= self.frame_buffer.len() {
+            return;
         }
+
+        self.frame_buffer[(real_y + real_x)..(real_y + real_x + self.bytes_per_pixel)]
+            .copy_from_slice(&color_bytes[..self.bytes_per_pixel]);
     }
 
     pub fn update(&mut self, new_data: FrameBufferWriter) {
@@ -118,5 +119,38 @@ impl FrameBufferWriter {
         self.width = new_data.width;
         self.height = new_data.width;
     }
-}
 
+    pub fn get_colors_bytes(&mut self, color: Color) -> [u8; 4] {
+        match self.pixel_format {
+            PixelFormat::Rgb => [color.red, color.green, color.blue, 0],
+            PixelFormat::Bgr => [color.blue, color.green, color.red, 0],
+            _ => panic!("Unknown / Unsupported pixel format in frame buffer."),
+        }
+    }
+
+    pub fn fill_screen(&mut self, color: Color) {
+        let color_bytes = self.get_colors_bytes(color);
+
+        let mut start: usize = 0;
+
+        for _ in 0..self.frame_buffer.len() / self.bytes_per_pixel {
+            self.frame_buffer[start..(start + self.bytes_per_pixel)].copy_from_slice(&color_bytes[..self.bytes_per_pixel]);
+            start += self.bytes_per_pixel;
+        }
+    }
+
+    pub fn clear_screen(&mut self) {
+        for index in 0..self.frame_buffer.len() {
+            self.frame_buffer[index] = 0;
+        }
+        CURSOR.lock().clear_screen()
+    }
+
+    pub fn rainbow(&mut self) {
+        loop {
+            self.fill_screen(Color::new(255, 0, 0));
+            self.fill_screen(Color::new(0, 255, 0));
+            self.fill_screen(Color::new(0, 0, 255));
+        }
+    }
+}

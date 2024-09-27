@@ -7,7 +7,7 @@ pub struct Locked<T> {
 impl<T> Locked<T> {
     pub const fn new(data: T) -> Self {
         Self {
-            inner: Mutex::new(data)
+            inner: Mutex::new(data),
         }
     }
 
@@ -15,4 +15,3 @@ impl<T> Locked<T> {
         self.inner.lock()
     }
 }
-

@@ -90,18 +90,17 @@ pub fn init(boot_info: &'static mut BootInfo) {
             let bytes_per_pixel: usize = frame_buffer_info.bytes_per_pixel;
             let pixel_format: PixelFormat = frame_buffer_info.pixel_format;
 
-            unsafe {
-                FRAME_BUFFER_WRITER.lock().update(FrameBufferWriter::new(
-                    frame_buffer.into_buffer(),
-                    pixel_format,
-                    bytes_per_pixel,
-                    screen_width,
-                    screen_height,
-                ));
-            }
+            FRAME_BUFFER_WRITER.lock().update(FrameBufferWriter::new(
+                frame_buffer.into_buffer(),
+                pixel_format,
+                bytes_per_pixel,
+                screen_width,
+                screen_height,
+            ));
         }
     }
 
+    FRAME_BUFFER_WRITER.lock().clear_screen();
     CURSOR.lock().update(Cursor::new(Font::new(PPMFormat::new(FONT_DATA))));
     Logger::init();
 }

@@ -1,7 +1,7 @@
+use crate::utils::locked::Locked;
 use core::alloc::{GlobalAlloc, Layout};
 use core::ptr;
 use core::ptr::NonNull;
-use crate::utils::locked::Locked;
 
 struct ListNode {
     next: Option<&'static mut ListNode>,
@@ -36,7 +36,7 @@ impl FixedSizeBlockAllocator {
     }
 }
 
-impl Default for FixedSizeBlockAllocator{
+impl Default for FixedSizeBlockAllocator {
     fn default() -> Self {
         Self::new()
     }

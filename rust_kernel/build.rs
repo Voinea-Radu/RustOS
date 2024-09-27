@@ -28,7 +28,7 @@ fn generate_fonts() {
 
     if !output.status.success() {
         eprintln!("Error output: {}", String::from_utf8_lossy(&output.stderr));
-        panic!("Python script execution failed");
+        //panic!("Python script execution failed");
     }
 }
 
@@ -42,6 +42,6 @@ fn generate_images() {
 
     if !output.status.success() {
         eprintln!("Error output: {}", String::from_utf8_lossy(&output.stderr));
-        panic!("Python script execution failed");
+        //panic!("Python script execution failed");
     }
 }

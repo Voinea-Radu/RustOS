@@ -12,7 +12,7 @@ entry_point!(kernel_main, config = &CONFIG);
 fn kernel_main(boot_info: &'static mut BootInfo) -> ! {
     rust_kernel::init(boot_info);
 
-    for index in 1..=1000{
+    for index in 1..=10{
         info!("Line{}", index);
     }
 

@@ -42,13 +42,6 @@ impl Default for FixedSizeBlockAllocator {
     }
 }
 
-fn list_index(layout: &Layout) -> Option<usize> {
-    let required_block_size = layout.size().max(layout.align());
-    BLOCK_SIZES
-        .iter()
-        .position(|&size| size >= required_block_size)
-}
-
 unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let mut allocator = self.lock();
@@ -89,4 +82,11 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
             }
         }
     }
+}
+
+fn list_index(layout: &Layout) -> Option<usize> {
+    let required_block_size = layout.size().max(layout.align());
+    BLOCK_SIZES
+        .iter()
+        .position(|&size| size >= required_block_size)
 }

@@ -1,8 +1,12 @@
+#![feature(abi_x86_interrupt)]
 #![no_std]
 #![no_main]
 
 extern crate alloc;
 
+use crate::bios::{global_descriptor_table, interrupts};
+use crate::driver::display::cursor::{Cursor, CURSOR};
+use crate::driver::display::font::Font;
 use crate::driver::display::frame_buffer::{FrameBuffer, FRAME_BUFFER};
 use crate::driver::display::image::PPMFormat;
 use crate::driver::logger::Logger;
@@ -13,9 +17,8 @@ use bootloader_api::config::Mapping;
 use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 use bootloader_api::BootInfo;
 use core::panic::PanicInfo;
+use x86_64::structures::paging::OffsetPageTable;
 use x86_64::VirtAddr;
-use crate::driver::display::cursor::{Cursor, CURSOR};
-use crate::driver::display::font::Font;
 
 pub static FONT_DATA: &[u8] = include_bytes!("../assets/fonts/noto_sans_mono.ppm");
 pub static TROLL1_DATA: &[u8] = include_bytes!("../assets/images/troll1.ppm");
@@ -28,6 +31,10 @@ pub const CONFIG: bootloader_api::BootloaderConfig = {
     config
 };
 
+pub mod bios {
+    pub mod interrupts;
+    pub mod global_descriptor_table;
+}
 pub mod driver {
     pub mod display {
         pub mod cursor;
@@ -50,6 +57,7 @@ pub mod utils {
     pub mod color;
     pub mod locked;
 }
+pub mod apic;
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
@@ -70,39 +78,60 @@ pub fn hlt_loop() -> ! {
 }
 
 pub fn init(boot_info: &'static mut BootInfo) {
-    let physical_memory_offset = VirtAddr::new(
-        boot_info
-            .physical_memory_offset
-            .take()
-            .expect("Failed to find physical memory offset"),
-    );
-    let mut mapper = frame_allocator::init(physical_memory_offset);
-    let mut frame_allocator = BootInfoFrameAllocator::new(&boot_info.memory_regions);
-
-    heap_allocator::init(&mut mapper, &mut frame_allocator).expect("Heap initialization failed");
-
-    match boot_info.framebuffer.take() {
-        None => {
-            println_serial!("framebuffer not found in boot_info");
+    // Interrupts - BIOS
+    {
+        global_descriptor_table::init();
+        interrupts::IDT.load();
+        unsafe {
+            interrupts::PICS.lock().initialize();
         }
-        Some(frame_buffer) => {
-            let frame_buffer_info: FrameBufferInfo = frame_buffer.info();
-            let screen_width: usize = frame_buffer_info.width;
-            let screen_height: usize = frame_buffer_info.height;
-            let bytes_per_pixel: usize = frame_buffer_info.bytes_per_pixel;
-            let pixel_format: PixelFormat = frame_buffer_info.pixel_format;
+        x86_64::instructions::interrupts::enable();
+    }
 
-            FRAME_BUFFER.lock().update(FrameBuffer::new(
-                frame_buffer.into_buffer(),
-                pixel_format,
-                bytes_per_pixel,
-                screen_width,
-                screen_height,
-            ));
+    // Memory
+    {
+        let physical_memory_offset = VirtAddr::new(
+            boot_info
+                .physical_memory_offset
+                .take()
+                .expect("Failed to find physical memory offset"),
+        );
+        let mut mapper: OffsetPageTable<'static> = frame_allocator::init(physical_memory_offset);
+        let mut frame_allocator = BootInfoFrameAllocator::new(&boot_info.memory_regions);
+
+        heap_allocator::init(&mut mapper, &mut frame_allocator).expect("Heap initialization failed");
+
+        unsafe {
+            let rsdp = boot_info.rsdp_addr.take().unwrap();
+            apic::init(rsdp as usize, physical_memory_offset, &mut mapper, &mut frame_allocator);
         }
     }
 
-    FRAME_BUFFER.lock().clear_screen();
-    CURSOR.lock().update(Cursor::new(Font::new(PPMFormat::new(FONT_DATA))));
-    Logger::init();
+    // VGA
+    {
+        match boot_info.framebuffer.take() {
+            None => {
+                println_serial!("framebuffer not found in boot_info");
+            }
+            Some(frame_buffer) => {
+                let frame_buffer_info: FrameBufferInfo = frame_buffer.info();
+                let screen_width: usize = frame_buffer_info.width;
+                let screen_height: usize = frame_buffer_info.height;
+                let bytes_per_pixel: usize = frame_buffer_info.bytes_per_pixel;
+                let pixel_format: PixelFormat = frame_buffer_info.pixel_format;
+
+                FRAME_BUFFER.lock().update(FrameBuffer::new(
+                    frame_buffer.into_buffer(),
+                    pixel_format,
+                    bytes_per_pixel,
+                    screen_width,
+                    screen_height,
+                ));
+            }
+        }
+
+        FRAME_BUFFER.lock().clear_screen();
+        CURSOR.lock().update(Cursor::new(Font::new(PPMFormat::new(FONT_DATA))));
+        Logger::init();
+    }
 }

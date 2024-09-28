@@ -49,3 +49,4 @@ fn active_level4_table(physical_memory_offset: VirtAddr) -> &'static mut PageTab
 
     unsafe { &mut *page_table_pointer }
 }
+

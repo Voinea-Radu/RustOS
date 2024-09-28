@@ -1,4 +1,4 @@
-use crate::driver::display::frame_buffer::{Color, FRAME_BUFFER_WRITER};
+use crate::driver::display::frame_buffer::{Color, FRAME_BUFFER};
 use core::cmp::min;
 
 pub struct PPMFormat {
@@ -8,30 +8,6 @@ pub struct PPMFormat {
     height: usize,
     possible_colors: usize,
     pub data: &'static [u8],
-}
-
-pub trait AssetAtlas {
-    fn get_asset_width(&self) -> usize;
-    fn get_asset_height(&self) -> usize;
-    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color);
-
-    /**
-    @arg x - the x position to render at
-    @arg y - the y position to render at
-    @arg local_x - local_x'th row in the AssetAtlas
-    @arg local_y - local_y'th column in the AssetAtlas
-    **/
-    fn render_asset(&self, x: usize, y: usize, local_x: usize, local_y: usize, color: Color) {
-        self.render_box(
-            x,
-            y,
-            local_x * self.get_asset_width(),
-            local_y * self.get_asset_height(),
-            self.get_asset_width(),
-            self.get_asset_height(),
-            color
-        );
-    }
 }
 
 impl PPMFormat {
@@ -106,7 +82,7 @@ impl PPMFormat {
     }
 
     pub fn render(&self, x: usize, y: usize) {
-        let mut frame_buffer_writer = FRAME_BUFFER_WRITER.lock();
+        let mut frame_buffer_writer = FRAME_BUFFER.lock();
 
         for y_offset in 0..self.height() {
             for x_offset in 0..self.width() {
@@ -122,7 +98,7 @@ impl PPMFormat {
     }
 
     pub fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color) {
-        let mut frame_buffer_writer = FRAME_BUFFER_WRITER.lock();
+        let mut frame_buffer_writer = FRAME_BUFFER.lock();
 
         for y_offset in 0..min(self.height(), box_height) {
             for x_offset in 0..min(self.width(), box_width) {
@@ -144,6 +120,33 @@ impl PPMFormat {
 
     #[inline]
     pub fn apply_hue(base: u8, color: u8) -> u8 {
-       ((255 - base) as usize * color as usize / 255) as u8
+        if color == 255 {
+            return base;
+        }
+        (base as usize * color as usize / 255) as u8
     }
 }
+pub trait AssetAtlas {
+    fn get_asset_width(&self) -> usize;
+    fn get_asset_height(&self) -> usize;
+    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color);
+
+    /**
+    @arg x - the x position to render at
+    @arg y - the y position to render at
+    @arg local_x - local_x'th row in the AssetAtlas
+    @arg local_y - local_y'th column in the AssetAtlas
+    **/
+    fn render_asset(&self, x: usize, y: usize, local_x: usize, local_y: usize, color: Color) {
+        self.render_box(
+            x,
+            y,
+            local_x * self.get_asset_width(),
+            local_y * self.get_asset_height(),
+            self.get_asset_width(),
+            self.get_asset_height(),
+            color,
+        );
+    }
+}
+

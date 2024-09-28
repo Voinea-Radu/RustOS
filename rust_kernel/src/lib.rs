@@ -3,8 +3,7 @@
 
 extern crate alloc;
 
-use crate::driver::display::font::{Cursor, Font, CURSOR};
-use crate::driver::display::frame_buffer::{FrameBufferWriter, FRAME_BUFFER_WRITER};
+use crate::driver::display::frame_buffer::{FrameBuffer, FRAME_BUFFER};
 use crate::driver::display::image::PPMFormat;
 use crate::driver::logger::Logger;
 use crate::memory::frame_allocator::BootInfoFrameAllocator;
@@ -15,6 +14,8 @@ use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 use bootloader_api::BootInfo;
 use core::panic::PanicInfo;
 use x86_64::VirtAddr;
+use crate::driver::display::cursor::{Cursor, CURSOR};
+use crate::driver::display::font::Font;
 
 pub static FONT_DATA: &[u8] = include_bytes!("../assets/fonts/noto_sans_mono.ppm");
 pub static TROLL1_DATA: &[u8] = include_bytes!("../assets/images/troll1.ppm");
@@ -29,6 +30,7 @@ pub const CONFIG: bootloader_api::BootloaderConfig = {
 
 pub mod driver {
     pub mod display {
+        pub mod cursor;
         pub mod font;
         pub mod frame_buffer;
         pub mod image;
@@ -90,7 +92,7 @@ pub fn init(boot_info: &'static mut BootInfo) {
             let bytes_per_pixel: usize = frame_buffer_info.bytes_per_pixel;
             let pixel_format: PixelFormat = frame_buffer_info.pixel_format;
 
-            FRAME_BUFFER_WRITER.lock().update(FrameBufferWriter::new(
+            FRAME_BUFFER.lock().update(FrameBuffer::new(
                 frame_buffer.into_buffer(),
                 pixel_format,
                 bytes_per_pixel,
@@ -100,7 +102,7 @@ pub fn init(boot_info: &'static mut BootInfo) {
         }
     }
 
-    FRAME_BUFFER_WRITER.lock().clear_screen();
+    FRAME_BUFFER.lock().clear_screen();
     CURSOR.lock().update(Cursor::new(Font::new(PPMFormat::new(FONT_DATA))));
     Logger::init();
 }

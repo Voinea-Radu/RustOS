@@ -1,7 +1,7 @@
-use crate::driver::display::font::CURSOR;
 use crate::println_serial;
 use core::fmt::Write;
 use log::{set_logger, set_max_level, LevelFilter, Metadata, Record};
+use crate::driver::display::cursor::CURSOR;
 
 pub static LOGGER: Logger = Logger::new();
 

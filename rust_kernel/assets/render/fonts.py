@@ -1,7 +1,7 @@
 import os
 import sys
+
 from PIL import Image, ImageDraw, ImageFont
-from PIL.FontFile import FontFile
 from PIL.ImageFont import FreeTypeFont
 
 START_RANGE = 32
@@ -29,9 +29,9 @@ def get_max_width_height(font: FreeTypeFont) -> tuple[int, int]:
 def get_bytes_for_char(font: FreeTypeFont, char: str) -> bytes:
     max_width, max_height = get_max_width_height(font)
 
-    image = Image.new("RGB", (int(max_width), int(max_height)), color="white")
+    image = Image.new("RGB", (int(max_width), int(max_height)), color="black")
     draw = ImageDraw.Draw(image)
-    draw.text((0, 0), char, (0, 0, 0), font=font)
+    draw.text((0, 0), char, (255, 255, 255), font=font)
 
     image.save("tmp.ppm")
     data = open("tmp.ppm", "rb").read()
@@ -65,7 +65,8 @@ def generate_font_images(font: FreeTypeFont):
 
     convert(f"{font_name}.ppm", "png")
 
-def convert(file: str, target_format:str):
+
+def convert(file: str, target_format: str):
     file_without_extension = ".".join(file.split(".")[:-1])
     Image.open(file).save(f"{file_without_extension}.{target_format}")
 

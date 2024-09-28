@@ -104,6 +104,7 @@ pub fn init(boot_info: &'static mut BootInfo) {
         unsafe {
             let rsdp = boot_info.rsdp_addr.take().unwrap();
             apic::init(rsdp as usize, physical_memory_offset, &mut mapper, &mut frame_allocator);
+            apic::init_idt();
         }
     }
 

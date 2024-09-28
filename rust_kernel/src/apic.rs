@@ -3,6 +3,21 @@ use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
 use core::ptr::NonNull;
 use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PhysFrame, Size4KiB};
 use x86_64::{PhysAddr, VirtAddr};
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame};
+
+lazy_static::lazy_static! {
+    static ref IDT: InterruptDescriptorTable = {
+        let mut idt = InterruptDescriptorTable::new();
+        unsafe {
+            idt[32].set_handler_fn(timer_interrupt_handler); // Vector 0x20
+        }
+        idt
+    };
+}
+
+pub fn init_idt() {
+    IDT.load();
+}
 
 pub struct AcpiHandlerImpl {
     physical_memory_offset: VirtAddr,
@@ -53,32 +68,21 @@ pub unsafe fn init(
     mapper: &mut impl Mapper<Size4KiB>,
     frame_allocator: &mut impl FrameAllocator<Size4KiB>,
 ) {
-    println_serial!("1");
     let handler = AcpiHandlerImpl::new(physical_memory_offset);
-    println_serial!("2");
     let acpi_tables = AcpiTables::from_rsdp(handler, rsdp).expect("Failed to parse ACPI tables");
-    println_serial!("3");
     let platform_info = acpi_tables.platform_info().expect("Failed to get platform info");
-    println_serial!("4");
     match platform_info.interrupt_model {
         acpi::InterruptModel::Apic(apic) => {
-            println_serial!("5");
             let local_apic_address = apic.local_apic_address;
-            println_serial!("6");
             init_local_apic(local_apic_address as usize, mapper, frame_allocator);
-            println_serial!("7");
         }
         _ => {
-            println_serial!("8");
             // Handle other interrupt models if necessary
         }
     }
 
-    println_serial!("9");
     disable_pic();
-    println_serial!("10");
     x86_64::instructions::interrupts::enable();
-    println_serial!("11");
 }
 
 fn disable_pic() {
@@ -93,57 +97,40 @@ fn disable_pic() {
     }
 }
 
+static mut LAPIC_ADDR: *mut u32 = core::ptr::null_mut();
+
 unsafe fn init_local_apic(
     local_apic_addr: usize,
     mapper: &mut impl Mapper<Size4KiB>,
     frame_allocator: &mut impl FrameAllocator<Size4KiB>,
 ) {
-    println_serial!("20");
-    println_serial!("21");
     let virt_addr = map_apic(
         local_apic_addr as u64,
         mapper,
         frame_allocator,
     );
-    println_serial!("22");
 
-    println_serial!("23");
     let lapic_ptr = virt_addr.as_mut_ptr::<u32>();
-    println_serial!("24");
 
-    println_serial!("25");
+    // Store the LAPIC address for later use in the interrupt handler
+    LAPIC_ADDR = lapic_ptr;
+
     const APIC_SVR_OFFSET: isize = 0xF0;
-    println_serial!("26");
     const APIC_LVT_TIMER_OFFSET: isize = 0x320;
-    println_serial!("27");
     const APIC_TDCR_OFFSET: isize = 0x3E0;
-    println_serial!("28");
     const APIC_TIMER_INITIAL_COUNT_OFFSET: isize = 0x380;
-    println_serial!("29");
 
-    println_serial!("30");
     let svr = lapic_ptr.offset(APIC_SVR_OFFSET / 4);
-    println_serial!("31");
-    svr.write_volatile(svr.read_volatile() | 0x100); // Set bit 8 to enable the APIC
-    println_serial!("32");
+    svr.write_volatile(svr.read_volatile() | 0x100); // Set bit 8
 
-    println_serial!("33");
     let lvt_timer = lapic_ptr.offset(APIC_LVT_TIMER_OFFSET / 4);
-    println_serial!("34");
-    lvt_timer.write_volatile(0x10000); // Mask the timer
-    println_serial!("35");
+    lvt_timer.write_volatile(0x20 | (1 << 17)); // Vector 0x20, periodic mode
 
-    println_serial!("36");
     let tdcr = lapic_ptr.offset(APIC_TDCR_OFFSET / 4);
-    println_serial!("37");
     tdcr.write_volatile(0x3);
-    println_serial!("38");
 
-    println_serial!("39");
     let timer_initial_count = lapic_ptr.offset(APIC_TIMER_INITIAL_COUNT_OFFSET / 4);
-    println_serial!("40");
-    timer_initial_count.write_volatile(0);
-    println_serial!("41");
+    timer_initial_count.write_volatile(0x100000);
 }
 
 
@@ -169,4 +156,14 @@ fn map_apic(
     }
 
     page.start_address()
+}
+
+extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame) {
+    println_serial!(".");
+
+    unsafe {
+        const APIC_EOI_OFFSET: isize = 0xB0;
+        let lapic_ptr = LAPIC_ADDR;
+        lapic_ptr.offset(APIC_EOI_OFFSET / 4).write_volatile(0);
+    }
 }

@@ -4,11 +4,11 @@
 
 extern crate alloc;
 
-use crate::bios::{global_descriptor_table, interrupts};
 use crate::driver::display::cursor::{Cursor, CURSOR};
 use crate::driver::display::font::Font;
 use crate::driver::display::frame_buffer::{FrameBuffer, FRAME_BUFFER};
 use crate::driver::display::image::PPMFormat;
+use crate::driver::interrupts::controller::apic;
 use crate::driver::logger::Logger;
 use crate::memory::frame_allocator::BootInfoFrameAllocator;
 use crate::memory::{frame_allocator, heap_allocator};
@@ -31,9 +31,8 @@ pub const CONFIG: bootloader_api::BootloaderConfig = {
     config
 };
 
-pub mod bios {
-    pub mod interrupts;
-    pub mod global_descriptor_table;
+pub mod cpu {
+    pub mod gdt;
 }
 pub mod driver {
     pub mod display {
@@ -41,6 +40,13 @@ pub mod driver {
         pub mod font;
         pub mod frame_buffer;
         pub mod image;
+    }
+    pub mod interrupts {
+        pub mod controller {
+            pub mod apic;
+            pub mod pic;
+        }
+        pub mod interrupts_handlers;
     }
     pub mod logger;
     pub mod qemu;
@@ -57,7 +63,6 @@ pub mod utils {
     pub mod color;
     pub mod locked;
 }
-pub mod apic;
 
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
@@ -78,16 +83,6 @@ pub fn hlt_loop() -> ! {
 }
 
 pub fn init(boot_info: &'static mut BootInfo) {
-    // Interrupts - BIOS
-    {
-        global_descriptor_table::init();
-        interrupts::IDT.load();
-        unsafe {
-            interrupts::PICS.lock().initialize();
-        }
-        x86_64::instructions::interrupts::enable();
-    }
-
     // Memory
     {
         let physical_memory_offset = VirtAddr::new(
@@ -101,10 +96,14 @@ pub fn init(boot_info: &'static mut BootInfo) {
 
         heap_allocator::init(&mut mapper, &mut frame_allocator).expect("Heap initialization failed");
 
+        let rsdp: Option<u64> = boot_info.rsdp_addr.take();
+
+        #[cfg(feature = "bios")]
+        pic::init();
+
+        #[cfg(feature = "uefi")]
         unsafe {
-            let rsdp = boot_info.rsdp_addr.take().unwrap();
-            apic::init(rsdp as usize, physical_memory_offset, &mut mapper, &mut frame_allocator);
-            apic::init_idt();
+            apic::init(rsdp.expect("Failed to get RSDP address") as usize, physical_memory_offset, &mut mapper, &mut frame_allocator);
         }
     }
 

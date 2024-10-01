@@ -1,8 +1,11 @@
-use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
 use core::ptr::NonNull;
-use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, PhysFrame, Size4KiB};
+use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
+use x86_64::structures::paging::{FrameAllocator, Mapper, PhysFrame, Size4KiB};
 use x86_64::{PhysAddr, VirtAddr};
-use crate::println_serial;
+use crate::driver::interrupts::interrupts_handlers::IDT;
+
+pub const APIC_EOI_OFFSET: isize = 0xB0;
+pub static mut LAPIC_ADDR: *mut u32 = core::ptr::null_mut(); // Needs to be initialized
 
 pub struct AcpiHandlerImpl {
     physical_memory_offset: VirtAddr,
@@ -48,35 +51,90 @@ impl AcpiHandler for AcpiHandlerImpl {
     }
 }
 
-pub unsafe fn init(rsdp: usize, physical_memory_offset: VirtAddr) {
-    println_serial!("1");
+#[cfg(feature = "uefi")]
+pub unsafe fn init(
+    rsdp: usize, physical_memory_offset: VirtAddr,
+    mapper: &mut impl Mapper<Size4KiB>,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) {
     let handler = AcpiHandlerImpl::new(physical_memory_offset);
-    println_serial!("2");
     let acpi_tables = AcpiTables::from_rsdp(handler, rsdp).expect("Failed to parse ACPI tables");
-    println_serial!("3");
     let platform_info = acpi_tables.platform_info().expect("Failed to get platform info");
-    println_serial!("4");
     match platform_info.interrupt_model {
         acpi::InterruptModel::Apic(apic) => {
-            println_serial!("5");
             let local_apic_address = apic.local_apic_address;
-            println_serial!("6");
-            init_local_apic(local_apic_address as usize, physical_memory_offset);
-            println_serial!("7");
+            init_local_apic(local_apic_address as usize, mapper, frame_allocator);
         }
         _ => {
-            println_serial!("8");
             // Handle other interrupt models if necessary
         }
     }
 
-    println_serial!("9");
     disable_pic();
-    println_serial!("10");
     x86_64::instructions::interrupts::enable();
-    println_serial!("11");
+    IDT.load();
 }
 
+#[cfg(feature = "uefi")]
+unsafe fn init_local_apic(
+    local_apic_addr: usize,
+    mapper: &mut impl Mapper<Size4KiB>,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) {
+    let virt_addr = map_apic(
+        local_apic_addr as u64,
+        mapper,
+        frame_allocator,
+    );
+
+    let lapic_ptr = virt_addr.as_mut_ptr::<u32>();
+
+    // Store the LAPIC address for later use in the interrupt handler
+    LAPIC_ADDR = lapic_ptr;
+
+    const APIC_SVR_OFFSET: isize = 0xF0;
+    const APIC_LVT_TIMER_OFFSET: isize = 0x320;
+    const APIC_TDCR_OFFSET: isize = 0x3E0;
+    const APIC_TIMER_INITIAL_COUNT_OFFSET: isize = 0x380;
+
+    let svr = lapic_ptr.offset(APIC_SVR_OFFSET / 4);
+    svr.write_volatile(svr.read_volatile() | 0x100); // Set bit 8
+
+    let lvt_timer = lapic_ptr.offset(APIC_LVT_TIMER_OFFSET / 4);
+    lvt_timer.write_volatile(0x20 | (1 << 17)); // Vector 0x20, periodic mode
+
+    let tdcr = lapic_ptr.offset(APIC_TDCR_OFFSET / 4);
+    tdcr.write_volatile(0x3);
+
+    let timer_initial_count = lapic_ptr.offset(APIC_TIMER_INITIAL_COUNT_OFFSET / 4);
+    timer_initial_count.write_volatile(0x100000);
+}
+
+fn map_apic(
+    physical_address: u64,
+    mapper: &mut impl Mapper<Size4KiB>,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) -> VirtAddr {
+    use x86_64::structures::paging::Page;
+    use x86_64::structures::paging::PageTableFlags as Flags;
+
+    let phys_addr = PhysAddr::new(physical_address);
+    let page = Page::containing_address(VirtAddr::new(phys_addr.as_u64()));
+    let frame = PhysFrame::containing_address(phys_addr);
+
+    let flags = Flags::PRESENT | Flags::WRITABLE | Flags::NO_CACHE;
+
+    unsafe {
+        mapper
+            .map_to(page, frame, flags, frame_allocator)
+            .expect("APIC mapping failed")
+            .flush();
+    }
+
+    page.start_address()
+}
+
+#[cfg(feature = "uefi")]
 fn disable_pic() {
     use x86_64::instructions::port::Port;
 
@@ -89,53 +147,11 @@ fn disable_pic() {
     }
 }
 
-unsafe fn init_local_apic(
-    local_apic_addr: usize,
-    physical_memory_offset: VirtAddr,
-) {
-    println_serial!("20");
-    let phys_addr = PhysAddr::new(local_apic_addr as u64);
-    println_serial!("21");
-    let virt_addr = physical_memory_offset + phys_addr.as_u64();
-    println_serial!("22");
-
-    println_serial!("23");
-    let lapic_ptr = virt_addr.as_mut_ptr::<u32>();
-    println_serial!("24");
-
-    println_serial!("25");
-    const APIC_SVR_OFFSET: isize = 0xF0;
-    println_serial!("26");
-    const APIC_LVT_TIMER_OFFSET: isize = 0x320;
-    println_serial!("27");
-    const APIC_TDCR_OFFSET: isize = 0x3E0;
-    println_serial!("28");
-    const APIC_TIMER_INITIAL_COUNT_OFFSET: isize = 0x380;
-    println_serial!("29");
-
-    println_serial!("30");
-    let svr = lapic_ptr.offset(APIC_SVR_OFFSET / 4);
-    println_serial!("31");
-    svr.write_volatile(svr.read_volatile() | 0x100); // Set bit 8 to enable the APIC
-    println_serial!("32");
-
-    println_serial!("33");
-    let lvt_timer = lapic_ptr.offset(APIC_LVT_TIMER_OFFSET / 4);
-    println_serial!("34");
-    lvt_timer.write_volatile(0x10000); // Mask the timer
-    println_serial!("35");
-
-    println_serial!("36");
-    let tdcr = lapic_ptr.offset(APIC_TDCR_OFFSET / 4);
-    println_serial!("37");
-    tdcr.write_volatile(0x3);
-    println_serial!("38");
-
-    println_serial!("39");
-    let timer_initial_count = lapic_ptr.offset(APIC_TIMER_INITIAL_COUNT_OFFSET / 4);
-    println_serial!("40");
-    timer_initial_count.write_volatile(0);
-    println_serial!("41");
+#[cfg(feature = "uefi")]
+pub fn apic_end_interrupt() {
+    unsafe {
+        const APIC_EOI_OFFSET: isize = 0xB0;
+        let lapic_ptr = LAPIC_ADDR;
+        lapic_ptr.offset(APIC_EOI_OFFSET / 4).write_volatile(0);
+    }
 }
-
-

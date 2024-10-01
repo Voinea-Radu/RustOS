@@ -23,6 +23,7 @@ lazy_static! {
         };
         tss
     };
+
     static ref GDT: (GlobalDescriptorTable, Selectors) = {
         let mut gdt: GlobalDescriptorTable = GlobalDescriptorTable::new();
 

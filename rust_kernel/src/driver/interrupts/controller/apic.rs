@@ -1,8 +1,13 @@
+use acpi::{AcpiHandler, PhysicalMapping};
 use core::ptr::NonNull;
-use acpi::{AcpiHandler, AcpiTables, PhysicalMapping};
-use x86_64::structures::paging::{FrameAllocator, Mapper, PhysFrame, Size4KiB};
 use x86_64::{PhysAddr, VirtAddr};
+#[cfg(feature = "uefi")]
 use crate::driver::interrupts::interrupts_handlers::IDT;
+#[cfg(feature = "uefi")]
+use x86_64::structures::paging::{FrameAllocator, Mapper, PhysFrame, Size4KiB};
+#[cfg(feature = "uefi")]
+use acpi::AcpiTables;
+
 
 pub const APIC_EOI_OFFSET: isize = 0xB0;
 pub static mut LAPIC_ADDR: *mut u32 = core::ptr::null_mut(); // Needs to be initialized
@@ -90,7 +95,7 @@ unsafe fn init_local_apic(
     let lapic_ptr = virt_addr.as_mut_ptr::<u32>();
 
     // Store the LAPIC address for later use in the interrupt handler
-    LAPIC_ADDR = lapic_ptr;
+    LAPIC_ADDR = lapic_ptr; // If RustRover reports an error chances are that it's wrong. It should compile just fine.
 
     const APIC_SVR_OFFSET: isize = 0xF0;
     const APIC_LVT_TIMER_OFFSET: isize = 0x320;
@@ -110,6 +115,7 @@ unsafe fn init_local_apic(
     timer_initial_count.write_volatile(0x100000);
 }
 
+#[cfg(feature = "uefi")]
 fn map_apic(
     physical_address: u64,
     mapper: &mut impl Mapper<Size4KiB>,

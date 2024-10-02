@@ -8,7 +8,6 @@ use crate::driver::display::cursor::{Cursor, CURSOR};
 use crate::driver::display::font::Font;
 use crate::driver::display::frame_buffer::{FrameBuffer, FRAME_BUFFER};
 use crate::driver::display::image::PPMFormat;
-use crate::driver::interrupts::controller::apic;
 use crate::driver::logger::Logger;
 use crate::memory::frame_allocator::BootInfoFrameAllocator;
 use crate::memory::{frame_allocator, heap_allocator};
@@ -19,6 +18,11 @@ use bootloader_api::BootInfo;
 use core::panic::PanicInfo;
 use x86_64::structures::paging::OffsetPageTable;
 use x86_64::VirtAddr;
+
+#[cfg(feature = "uefi")]
+use crate::driver::interrupts::controller::apic;
+#[cfg(feature = "bios")]
+use crate::driver::interrupts::controller::pic;
 
 pub static FONT_DATA: &[u8] = include_bytes!("../assets/fonts/noto_sans_mono.ppm");
 pub static TROLL1_DATA: &[u8] = include_bytes!("../assets/images/troll1.ppm");

@@ -16,3 +16,9 @@ ovmf-prebuilt = "0.1.0-alpha.1"
 
 [workspace]
 members = ["rust_kernel"]
+
+[features]
+default = ["uefi", "rust_kernel/default"]
+bios = ["rust_kernel/bios"]
+uefi = ["rust_kernel/uefi"]
+high-performance = []

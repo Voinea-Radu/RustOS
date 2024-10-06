@@ -1,5 +1,6 @@
 fn main() {
     let uefi_path = env!("UEFI_PATH");
+    #[cfg(feature = "bios")]
     let bios_path = env!("BIOS_PATH");
 
     println!("{uefi_path}");

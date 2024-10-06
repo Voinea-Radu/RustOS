@@ -52,6 +52,7 @@ pub mod driver {
         }
         pub mod interrupts_handlers;
     }
+    pub mod keyboard;
     pub mod logger;
     pub mod qemu;
     pub mod serial;

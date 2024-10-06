@@ -1,31 +1,43 @@
-use acpi::{AcpiHandler, PhysicalMapping};
-use core::ptr::NonNull;
-use x86_64::{PhysAddr, VirtAddr};
+use crate::driver::interrupts::interrupts_handlers::InterruptIndex;
 #[cfg(feature = "uefi")]
 use crate::driver::interrupts::interrupts_handlers::IDT;
 #[cfg(feature = "uefi")]
-use x86_64::structures::paging::{FrameAllocator, Mapper, PhysFrame, Size4KiB};
-#[cfg(feature = "uefi")]
 use acpi::AcpiTables;
+use acpi::{AcpiHandler, PhysicalMapping};
+use core::ptr::NonNull;
 use lazy_static::lazy_static;
 use spin::Mutex;
+#[cfg(feature = "uefi")]
+use x86_64::structures::paging::{FrameAllocator, Mapper, PhysFrame, Size4KiB};
+use x86_64::{PhysAddr, VirtAddr};
+use crate::println_serial;
 
-pub const APIC_EOI_OFFSET: isize = 0xB0;
-lazy_static!{
+lazy_static! {
     pub static ref  LAPIC_ADDR: Mutex<LAPICAddress> = Mutex::new(LAPICAddress::new()); // Needs to be initialized
 }
 
-pub struct LAPICAddress{
-    address: *mut u32
+#[derive(Debug, Clone, Copy)]
+#[repr(isize)]
+pub enum APICOffset {
+    EOI = 0xb0,
+    SVR = 0xF0,
+    LVTTimer = 0x320,
+    TDCR = 0x3E0,
+    TimerInitialCount = 0x380,
+    LVTKeyboard = 0x360,
+}
+
+pub struct LAPICAddress {
+    address: *mut u32,
 }
 
 unsafe impl Send for LAPICAddress {}
 unsafe impl Sync for LAPICAddress {}
 
 impl LAPICAddress {
-    pub fn new()->Self{
-        Self{
-            address:core::ptr::null_mut()
+    pub fn new() -> Self {
+        Self {
+            address: core::ptr::null_mut()
         }
     }
 }
@@ -94,6 +106,7 @@ pub unsafe fn init(
     }
 
     disable_pic();
+
     x86_64::instructions::interrupts::enable();
     IDT.load();
 }
@@ -111,26 +124,28 @@ unsafe fn init_local_apic(
     );
 
     let lapic_ptr = virt_addr.as_mut_ptr::<u32>();
-
-    // Store the LAPIC address for later use in the interrupt handler
     LAPIC_ADDR.lock().address = lapic_ptr;
 
-    const APIC_SVR_OFFSET: isize = 0xF0;
-    const APIC_LVT_TIMER_OFFSET: isize = 0x320;
-    const APIC_TDCR_OFFSET: isize = 0x3E0;
-    const APIC_TIMER_INITIAL_COUNT_OFFSET: isize = 0x380;
+    // Timer
+    {
+        let svr = lapic_ptr.offset(APICOffset::SVR as isize / 4);
+        svr.write_volatile(svr.read_volatile() | 0x100); // Set bit 8
 
-    let svr = lapic_ptr.offset(APIC_SVR_OFFSET / 4);
-    svr.write_volatile(svr.read_volatile() | 0x100); // Set bit 8
+        let lvt_timer = lapic_ptr.offset(APICOffset::LVTTimer as isize / 4);
+        lvt_timer.write_volatile(0x20 | (1 << 17)); // Vector 0x20, periodic mode
 
-    let lvt_timer = lapic_ptr.offset(APIC_LVT_TIMER_OFFSET / 4);
-    lvt_timer.write_volatile(0x20 | (1 << 17)); // Vector 0x20, periodic mode
+        let tdcr = lapic_ptr.offset(APICOffset::TDCR as isize / 4);
+        tdcr.write_volatile(0x3);
 
-    let tdcr = lapic_ptr.offset(APIC_TDCR_OFFSET / 4);
-    tdcr.write_volatile(0x3);
+        let timer_initial_count = lapic_ptr.offset(APICOffset::TimerInitialCount as isize / 4);
+        timer_initial_count.write_volatile(0x100000);
+    }
 
-    let timer_initial_count = lapic_ptr.offset(APIC_TIMER_INITIAL_COUNT_OFFSET / 4);
-    timer_initial_count.write_volatile(0x100000);
+    // Keyboard
+    {
+        let lvt_keyboard = lapic_ptr.offset(APICOffset::LVTKeyboard as isize / 4);
+        lvt_keyboard.write_volatile(InterruptIndex::Keyboard as u8 as u32);
+    }
 }
 
 #[cfg(feature = "uefi")]
@@ -163,19 +178,14 @@ fn disable_pic() {
     use x86_64::instructions::port::Port;
 
     unsafe {
-        let mut pic1 = Port::<u8>::new(0xA1);
-        let mut pic2 = Port::<u8>::new(0x21);
-
-        pic1.write(0xFF);
-        pic2.write(0xFF);
+        Port::<u8>::new(0xA1).write(0xFF);
     }
 }
 
 #[cfg(feature = "uefi")]
 pub fn apic_end_interrupt() {
     unsafe {
-        const APIC_EOI_OFFSET: isize = 0xB0;
         let lapic_ptr = LAPIC_ADDR.lock().address;
-        lapic_ptr.offset(APIC_EOI_OFFSET / 4).write_volatile(0);
+        lapic_ptr.offset(APICOffset::EOI as isize / 4).write_volatile(0);
     }
 }

@@ -1,15 +1,16 @@
-use lazy_static::lazy_static;
 use crate::cpu::gdt::DOUBLE_FAULT_IST_INDEX;
-use crate::{hlt_loop, print_serial, println_serial};
-use x86_64::registers::control::Cr2;
-use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 #[cfg(feature = "uefi")]
 use crate::driver::interrupts::controller::apic::apic_end_interrupt;
 #[cfg(feature = "bios")]
 use crate::driver::interrupts::controller::pic::PICS;
+use crate::{hlt_loop, print_serial, println_serial};
+use lazy_static::lazy_static;
+use x86_64::registers::control::Cr2;
+use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 
-pub const PIC_1_OFFSET: u8 = 32;
+pub const PIC_1_OFFSET: u8 = 0x20;
 pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
+
 
 lazy_static! {
     pub static ref IDT: InterruptDescriptorTable = {
@@ -19,7 +20,7 @@ lazy_static! {
         idt.page_fault.set_handler_fn(handle_page_fault);
 
         idt[InterruptIndex::Timer as u8].set_handler_fn(handle_timer);
-        //idt[InterruptIndex::Keyboard as u8].set_handler_fn(keyboard_interrupt_handler);
+        idt[InterruptIndex::Keyboard as u8].set_handler_fn(crate::driver::keyboard::handle_keyboard);
 
         unsafe {
             idt.double_fault
@@ -38,9 +39,7 @@ pub enum InterruptIndex {
     Keyboard,
 }
 
-pub extern "x86-interrupt" fn handle_timer(_stack_frame: InterruptStackFrame) {
-    print_serial!(".");
-
+pub fn end_interrupt() {
     #[cfg(feature = "bios")]
     unsafe {
         PICS.lock().notify_end_of_interrupt(InterruptIndex::Timer as u8);
@@ -48,6 +47,12 @@ pub extern "x86-interrupt" fn handle_timer(_stack_frame: InterruptStackFrame) {
 
     #[cfg(feature = "uefi")]
     apic_end_interrupt();
+}
+
+pub extern "x86-interrupt" fn handle_timer(_stack_frame: InterruptStackFrame) {
+    print_serial!(".");
+
+    end_interrupt();
 }
 
 pub extern "x86-interrupt" fn handle_breakpoint(stack_frame: InterruptStackFrame) {

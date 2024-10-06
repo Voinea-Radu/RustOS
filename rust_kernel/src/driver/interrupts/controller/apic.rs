@@ -7,10 +7,28 @@ use crate::driver::interrupts::interrupts_handlers::IDT;
 use x86_64::structures::paging::{FrameAllocator, Mapper, PhysFrame, Size4KiB};
 #[cfg(feature = "uefi")]
 use acpi::AcpiTables;
-
+use lazy_static::lazy_static;
+use spin::Mutex;
 
 pub const APIC_EOI_OFFSET: isize = 0xB0;
-pub static mut LAPIC_ADDR: *mut u32 = core::ptr::null_mut(); // Needs to be initialized
+lazy_static!{
+    pub static ref  LAPIC_ADDR: Mutex<LAPICAddress> = Mutex::new(LAPICAddress::new()); // Needs to be initialized
+}
+
+pub struct LAPICAddress{
+    address: *mut u32
+}
+
+unsafe impl Send for LAPICAddress {}
+unsafe impl Sync for LAPICAddress {}
+
+impl LAPICAddress {
+    pub fn new()->Self{
+        Self{
+            address:core::ptr::null_mut()
+        }
+    }
+}
 
 pub struct AcpiHandlerImpl {
     physical_memory_offset: VirtAddr,
@@ -95,7 +113,7 @@ unsafe fn init_local_apic(
     let lapic_ptr = virt_addr.as_mut_ptr::<u32>();
 
     // Store the LAPIC address for later use in the interrupt handler
-    LAPIC_ADDR = lapic_ptr; // If RustRover reports an error chances are that it's wrong. It should compile just fine.
+    LAPIC_ADDR.lock().address = lapic_ptr;
 
     const APIC_SVR_OFFSET: isize = 0xF0;
     const APIC_LVT_TIMER_OFFSET: isize = 0x320;
@@ -157,7 +175,7 @@ fn disable_pic() {
 pub fn apic_end_interrupt() {
     unsafe {
         const APIC_EOI_OFFSET: isize = 0xB0;
-        let lapic_ptr = LAPIC_ADDR;
+        let lapic_ptr = LAPIC_ADDR.lock().address;
         lapic_ptr.offset(APIC_EOI_OFFSET / 4).write_volatile(0);
     }
 }

@@ -1,21 +1,12 @@
 use crate::driver::display::cursor::CURSOR;
 use crate::utils::locked::Locked;
 use bootloader_api::info::PixelFormat;
+use crate::utils::color::Color;
 
 pub static FRAME_BUFFER: Locked<FrameBuffer> =
     Locked::new(FrameBuffer::default());
 
-pub struct Color {
-    pub(crate) red: u8,
-    pub(crate) green: u8,
-    pub(crate) blue: u8,
-}
 
-impl Color {
-    pub fn new(red: u8, green: u8, blue: u8) -> Self {
-        Self { red, green, blue }
-    }
-}
 
 pub struct FrameBuffer {
     buffer: &'static mut [u8],

@@ -1,4 +1,5 @@
-use crate::driver::display::frame_buffer::{Color, FRAME_BUFFER};
+use crate::driver::display::frame_buffer::FRAME_BUFFER;
+use crate::utils::color::Color;
 use core::cmp::min;
 
 pub struct PPMFormat {

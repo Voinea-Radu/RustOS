@@ -1,5 +1,6 @@
-use crate::driver::display::frame_buffer::{Color, FRAME_BUFFER};
+use crate::driver::display::frame_buffer::FRAME_BUFFER;
 use crate::driver::display::image::{AssetAtlas, PPMFormat};
+use crate::utils::color::Color;
 
 pub const ASCII_TABLE_START: usize = 32;
 pub const ASCII_TABLE_END: usize = 126;

@@ -1,7 +1,6 @@
 use crate::driver::interrupts::interrupts_handlers::InterruptIndex;
 #[cfg(feature = "uefi")]
 use crate::driver::interrupts::interrupts_handlers::IDT;
-use crate::println_serial;
 #[cfg(feature = "uefi")]
 use acpi::AcpiTables;
 use acpi::{AcpiHandler, PhysicalMapping};
@@ -164,7 +163,7 @@ unsafe fn init_io_apic(
 
     let ioapic_pointer = virt_addr.as_mut_ptr::<u32>();
 
-    ioapic_pointer.write_volatile(0x12);
+    ioapic_pointer.offset(0).write_volatile(0x12);
     ioapic_pointer.offset(4).write_volatile(InterruptIndex::Keyboard as u8 as u32);
 }
 

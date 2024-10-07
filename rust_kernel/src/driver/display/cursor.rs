@@ -1,5 +1,6 @@
 use crate::driver::display::font::Font;
-use crate::driver::display::frame_buffer::{Color, FRAME_BUFFER};
+use crate::driver::display::frame_buffer::FRAME_BUFFER;
+use crate::utils::color::Color;
 use crate::utils::locked::Locked;
 use core::fmt;
 
@@ -21,6 +22,12 @@ impl Cursor {
             font: Font::default(),
             x: 0,
             y: 0,
+        }
+    }
+
+    pub fn render_str(&mut self, string: &str, color: Color) {
+        for char in string.chars() {
+            self.render(char, color);
         }
     }
 
@@ -66,10 +73,65 @@ impl Cursor {
 
 impl fmt::Write for Cursor {
     fn write_str(&mut self, string: &str) -> fmt::Result {
-        for char in string.chars() {
-            self.render(char, Color::new(255, 255, 0));
-        }
-
+        self.render_str(string, Color::new(255, 255, 0));
         Ok(())
     }
+}
+
+pub fn _print(args: fmt::Arguments, color: Option<Color>) {
+    use core::fmt::Write;
+    let mut cursor = CURSOR.lock();
+
+    x86_64::instructions::interrupts::without_interrupts(|| {
+        match color {
+            None => cursor.write_fmt(args).unwrap(),
+            Some(color) => cursor.render_str(args.as_str().unwrap(), color),
+        }
+    })
+}
+
+/**
+print!("Example {} {} {}", 1, 2, 3);
+**/
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => {
+        $crate::driver::display::cursor::_print(format_args!($($arg)*), None)
+    };
+}
+
+/**
+println!("Example {} {} {}", 1, 2, 3);
+**/
+#[macro_export]
+macro_rules! println {
+    () => {
+        $crate::print!("\n")
+    };
+    ($($arg:expr),*) => {
+        $crate::print!("{}\n", format_args!($($arg),*))
+    };
+}
+
+/**
+print_color!("Example {} {} {}", 1, 2, 3 => Color::new(LightRed, Black));
+**/
+#[macro_export]
+macro_rules! print_color {
+    ($($arg:expr),* => $color:expr) => {
+        $crate::driver::display::cursor::_print(format_args!($($arg),*), Some($color))
+    };
+}
+
+/**
+println_color!("Example {} {} {}", 1, 2, 3 => Color::new(LightRed, Black));
+**/
+#[macro_export]
+macro_rules! println_color {
+    () => {
+        $crate::print!("\n")
+    };
+    ($($arg:expr),* => $color:expr) => {
+        $crate::print_color!("{}\n", format_args!($($arg),*) => $color)
+    };
 }

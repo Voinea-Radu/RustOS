@@ -1,6 +1,6 @@
-use crate::driver::display::frame_buffer::FRAME_BUFFER;
-use crate::utils::color::Color;
+use crate::driver::display::frame_buffer::{ FRAME_BUFFER};
 use core::cmp::min;
+use crate::utils::color::Color;
 
 pub struct PPMFormat {
     #[allow(unused)]
@@ -98,7 +98,7 @@ impl PPMFormat {
         }
     }
 
-    pub fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color) {
+    pub fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: &Color) {
         let mut frame_buffer_writer = FRAME_BUFFER.lock();
 
         for y_offset in 0..min(self.height(), box_height) {
@@ -130,7 +130,7 @@ impl PPMFormat {
 pub trait AssetAtlas {
     fn get_asset_width(&self) -> usize;
     fn get_asset_height(&self) -> usize;
-    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color);
+    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color:& Color);
 
     /**
     @arg x - the x position to render at
@@ -138,7 +138,7 @@ pub trait AssetAtlas {
     @arg local_x - local_x'th row in the AssetAtlas
     @arg local_y - local_y'th column in the AssetAtlas
     **/
-    fn render_asset(&self, x: usize, y: usize, local_x: usize, local_y: usize, color: Color) {
+    fn render_asset(&self, x: usize, y: usize, local_x: usize, local_y: usize, color: &Color) {
         self.render_box(
             x,
             y,

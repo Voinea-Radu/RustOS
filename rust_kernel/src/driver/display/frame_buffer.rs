@@ -1,12 +1,9 @@
 use crate::driver::display::cursor::CURSOR;
+use crate::utils::color::Color;
 use crate::utils::locked::Locked;
 use bootloader_api::info::PixelFormat;
-use crate::utils::color::Color;
 
-pub static FRAME_BUFFER: Locked<FrameBuffer> =
-    Locked::new(FrameBuffer::default());
-
-
+pub static FRAME_BUFFER: Locked<FrameBuffer> = Locked::new(FrameBuffer::default());
 
 pub struct FrameBuffer {
     buffer: &'static mut [u8],
@@ -59,7 +56,7 @@ impl FrameBuffer {
         self.height
     }
 
-    pub fn draw_rectangle(&mut self, x: usize, y: usize, length: usize, height: usize, color: Color) {
+    pub fn draw_rectangle(&mut self, x: usize, y: usize, length: usize, height: usize, color: &Color) {
         for x_offset in 0..length {
             for y_offset in 0..height {
                 self.draw_pixel_raw(
@@ -73,13 +70,12 @@ impl FrameBuffer {
         }
     }
 
-    #[deprecated] // Use the #draw_pixel_raw method in order to reduce on copies of the color
-    pub fn draw_pixel(&mut self, x: usize, y: usize, color: Color) {
+    pub fn draw_pixel(&mut self, x: usize, y: usize, color: &Color) {
         self.draw_pixel_raw(x, y, color.red, color.green, color.blue)
     }
 
     pub fn draw_pixel_raw(&mut self, x: usize, y: usize, red: u8, green: u8, blue: u8) {
-        let color_bytes: [u8; 4] = self.get_colors_bytes_raw(red, green, blue);
+        let color_bytes: [u8; 4] = self.get_colors_bytes_raw(red, green,blue);
 
         let real_x: usize = x * self.bytes_per_pixel;
         let real_y: usize = y * self.width * self.bytes_per_pixel;
@@ -94,12 +90,8 @@ impl FrameBuffer {
         self.buffer[start_index..end_index].copy_from_slice(&color_bytes[..self.bytes_per_pixel]);
     }
 
-    pub fn get_colors_bytes(&mut self, color: Color) -> [u8; 4] {
-        match self.pixel_format {
-            PixelFormat::Rgb => [color.red, color.green, color.blue, 0],
-            PixelFormat::Bgr => [color.blue, color.green, color.red, 0],
-            _ => panic!("Unknown / Unsupported pixel format in frame buffer."),
-        }
+    pub fn get_colors_bytes(&mut self, color: &Color) -> [u8; 4] {
+        self.get_colors_bytes_raw(color.red, color.green, color.blue)
     }
 
     pub fn get_colors_bytes_raw(&mut self, red: u8, green: u8, blue: u8) -> [u8; 4] {
@@ -110,7 +102,7 @@ impl FrameBuffer {
         }
     }
 
-    pub fn fill_screen(&mut self, color: Color) {
+    pub fn fill_screen(&mut self, color: &Color) {
         let color_bytes = self.get_colors_bytes(color);
 
         for chunk in self.buffer.chunks_exact_mut(self.bytes_per_pixel) {

@@ -48,7 +48,7 @@ impl Font {
         frame_buffer_writer.height() / self.height()
     }
 
-    pub fn render(&self, x: usize, y: usize, char: char, color: Color) {
+    pub fn render(&self, x: usize, y: usize, char: char, color: &Color) {
         self.render_asset(x, y, 0, char as usize - ASCII_TABLE_START, color)
     }
 }
@@ -62,7 +62,7 @@ impl AssetAtlas for Font {
         self.height
     }
 
-    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: Color) {
+    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: &Color) {
         self.image.render_box(x, y, box_x, box_y, box_width, box_height, color)
     }
 }

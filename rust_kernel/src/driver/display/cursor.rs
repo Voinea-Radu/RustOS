@@ -25,13 +25,13 @@ impl Cursor {
         }
     }
 
-    pub fn render_str(&mut self, string: &str, color: Color) {
+    pub fn render_str(&mut self, string: &str, color: &Color) {
         for char in string.chars() {
             self.render(char, color);
         }
     }
 
-    pub fn render(&mut self, char: char, color: Color) {
+    pub fn render(&mut self, char: char, color: &Color) {
         if char == '\n' {
             self.render_new_line();
             return;
@@ -73,7 +73,7 @@ impl Cursor {
 
 impl fmt::Write for Cursor {
     fn write_str(&mut self, string: &str) -> fmt::Result {
-        self.render_str(string, Color::new(255, 255, 0));
+        self.render_str(string, &Color::new(255, 255, 0));
         Ok(())
     }
 }
@@ -85,7 +85,7 @@ pub fn _print(args: fmt::Arguments, color: Option<Color>) {
     x86_64::instructions::interrupts::without_interrupts(|| {
         match color {
             None => cursor.write_fmt(args).unwrap(),
-            Some(color) => cursor.render_str(args.as_str().unwrap(), color),
+            Some(color) => cursor.render_str(args.as_str().unwrap(), &color),
         }
     })
 }

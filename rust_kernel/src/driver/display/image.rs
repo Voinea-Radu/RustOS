@@ -1,6 +1,6 @@
-use crate::driver::display::frame_buffer::{ FRAME_BUFFER};
-use core::cmp::min;
+use crate::driver::display::frame_buffer::FRAME_BUFFER;
 use crate::utils::color::Color;
+use core::cmp::min;
 
 pub struct PPMFormat {
     #[allow(unused)]
@@ -130,7 +130,7 @@ impl PPMFormat {
 pub trait AssetAtlas {
     fn get_asset_width(&self) -> usize;
     fn get_asset_height(&self) -> usize;
-    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color:& Color);
+    fn render_box(&self, x: usize, y: usize, box_x: usize, box_y: usize, box_width: usize, box_height: usize, color: &Color);
 
     /**
     @arg x - the x position to render at

@@ -16,7 +16,7 @@ impl BootInfoFrameAllocator {
             next: 0,
         }
     }
-    pub fn usable_frames(&self) -> impl Iterator<Item = PhysFrame> {
+    pub fn usable_frames(&self) -> impl Iterator<Item=PhysFrame> {
         let regions = self.memory_map.iter();
 
         let usable_regions = regions.filter(|region| region.kind == Usable);

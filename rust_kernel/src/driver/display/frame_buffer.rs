@@ -75,7 +75,7 @@ impl FrameBuffer {
     }
 
     pub fn draw_pixel_raw(&mut self, x: usize, y: usize, red: u8, green: u8, blue: u8) {
-        let color_bytes: [u8; 4] = self.get_colors_bytes_raw(red, green,blue);
+        let color_bytes: [u8; 4] = self.get_colors_bytes_raw(red, green, blue);
 
         let real_x: usize = x * self.bytes_per_pixel;
         let real_y: usize = y * self.width * self.bytes_per_pixel;

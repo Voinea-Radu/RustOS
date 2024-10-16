@@ -35,6 +35,9 @@ pub const CONFIG: bootloader_api::BootloaderConfig = {
     config
 };
 
+pub mod bins {
+    pub mod shell;
+}
 pub mod cpu {
     pub mod gdt;
 }
